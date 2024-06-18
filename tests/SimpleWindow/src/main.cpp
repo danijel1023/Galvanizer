@@ -1,12 +1,27 @@
 #include <iostream>
 
-#include "../include/SimpleWindow.h"
-#include "BaseWindow.h"
+#include "Application.h"
 
+#include "../include/SimpleWindow.h"
+
+
+using namespace Galvanizer;
 
 int main()
 {
-    std::cout << "Get Rekt" << std::endl;
+    Application& app = Application::get();
+    //app.EnablePlugins(Application::DefaultPluginLocation);
 
-    Galvanizer::BaseWindow BW(nullptr, {0, 0}, {0, 0});
+    std::string SWFactory = "SimpleWindow";
+    Factory* factory = app.GetFactory(SWFactory);
+
+    if (!factory)
+    {
+        std::cout << "[ERROR] Unable to get \"" << SWFactory << "\" factory!" << std::endl;
+        return -1;
+    }
+
+    factory->ptr = &SimpleWindow::factory;
+
+    return app.Run();
 }
