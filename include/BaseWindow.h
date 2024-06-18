@@ -1,39 +1,42 @@
 #pragma once
 
 #include <string>
+#include <vector>
+
 #include "units.h"
+#include "Events.h"
+#include "GalvanizerObject.h"
 
 namespace Galvanizer
 {
 
+class MainWindow;
+
 class BaseWindow;
 
+using WinHNDL = MainWindow*;
 using BWinHNDL = BaseWindow*;
-using WinFactoryPtr = BWinHNDL(*)();
 
 
 class BaseWindow
+    : public GalvanizerObject
 {
 public:
-    BaseWindow(BWinHNDL parent, const std::string& name, Vec2 size, Vec2 pos);
-    BaseWindow(const std::string& name, Vec2 size, Vec2 pos);
+    static GObjHNDL factory(std::string_view name, GObjHNDL parent);
     virtual ~BaseWindow();
 
-    std::string getPath();
 
-    inline const std::string& getName() { return p_name; }
+    uintptr_t Callback(std::shared_ptr<Event> event) override;
+    uintptr_t Dispatcher(std::shared_ptr<Event> event) override;
 
 public:
     Vec2 size, pos;
 
 protected:
-    std::string p_name;
-    BWinHNDL p_parent = nullptr;
-    BWinHNDL p_mainWindow = nullptr;
+    BaseWindow(std::string_view name, GObjHNDL parent);
 
-private:
-
-    friend class Application;
+protected:
+    WinHNDL p_mainWindow = nullptr;
 };
 
 }
