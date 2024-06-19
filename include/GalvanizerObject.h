@@ -16,7 +16,6 @@ using GObjHNDL = GalvanizerObject*;
 class GalvanizerObject
 {
 public:
-    // I dont want this stoopid space - ik
     static GObjHNDL factory(std::string_view name, GObjHNDL parent);
     virtual ~GalvanizerObject();
 

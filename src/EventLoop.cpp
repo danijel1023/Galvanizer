@@ -9,13 +9,10 @@ using namespace EventConfiguration;
 
 EventLoop::EventLoop(IBlockingObject* BO, GObjHNDL dispatchRef, bool async)
     : m_queue(BO), m_async(async), m_dispatchRef(dispatchRef)
-{
-    std::cout << "SEX - negative 2" << std::endl;
-}
+{}
 
 EventLoop::~EventLoop()
 {
-    std::cout << "SEX - 2" << std::endl;
     Stop();
 }
 
