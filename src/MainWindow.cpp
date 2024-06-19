@@ -22,10 +22,7 @@ MainWindow::MainWindow(std::string_view name, GObjHNDL parent)
     p_eventLoop.Start();
 }
 
-MainWindow::~MainWindow()
-{
-    std::cout << "~MainWindow()" << std::endl;
-}
+MainWindow::~MainWindow() = default;
 
 
 uintptr_t MainWindow::Dispatcher(std::shared_ptr<Event> event)

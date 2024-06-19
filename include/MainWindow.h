@@ -21,10 +21,12 @@ public:
 protected:
     MainWindow(std::string_view name, GObjHNDL parent);
 
-    EventLoop p_eventLoop;
 
 private:
-    BlockingObject m_BO;
+    BlockingObject m_BO;    // I have to order them like this because of initialization order - I first
+
+protected:
+    EventLoop p_eventLoop;
 };
 
 }

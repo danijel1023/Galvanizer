@@ -23,8 +23,6 @@ public:
 class BlockingObject : public IBlockingObject
 {
 public:
-    ~BlockingObject() override = default;
-
     void WaitForEvent() override;
     void Notify() override;
 
