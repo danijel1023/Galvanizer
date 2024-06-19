@@ -23,7 +23,7 @@ protected:
 
 
 private:
-    BlockingObject m_BO;    // I have to order them like this because of initialization order - I first
+    BlockingObject m_BO;    // I have to order them like this because of initialization order
 
 protected:
     EventLoop p_eventLoop;
