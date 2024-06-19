@@ -429,20 +429,24 @@ uintptr_t Application::Callback(std::shared_ptr<Event> event)
 
 bool Application::Deconstruct(GObjHNDL obj)
 {
-    std::lock_guard lck(m_factoryMutex);
-
-    std::string targetLocation = obj->getTarget();
+    std::cout << "Destructing from thread: " << std::this_thread::get_id() << std::endl;
 
     bool foundFac = false;
-    for (const auto& owner: m_factoryRoots)
+
     {
-        Factory* targetFac = FindFactory(targetLocation, owner->ownerName);
+        std::lock_guard lck(m_factoryMutex);
 
-        if (!targetFac)
-            continue;
+        std::string targetLocation = obj->getTarget();
+        for (const auto& owner: m_factoryRoots)
+        {
+            Factory* targetFac = FindFactory(targetLocation, owner->ownerName);
 
-        targetFac->built = false;
-        foundFac = true;
+            if (!targetFac)
+                continue;
+
+            targetFac->built = false;
+            foundFac = true;
+        }
     }
 
     if (obj->p_parent)
