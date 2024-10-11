@@ -8,21 +8,23 @@ using namespace Galvanizer;
 using namespace EventConfiguration;
 
 
-GObjHNDL MainWindow::factory(std::string_view name, GObjHNDL parent)
+GObjHNDL MainWindow::factory(std::string_view name, GObjHNDL parent, Factory* originFac)
 {
-    return new MainWindow(name, parent);
+    return new MainWindow(name, parent, originFac);
 }
 
-MainWindow::MainWindow(std::string_view name, GObjHNDL parent)
-    : BaseWindow(name, parent), p_eventLoop(&m_BO, this)
+MainWindow::MainWindow(std::string_view name, GObjHNDL parent, Factory* originFac)
+    : BaseWindow(name, parent, originFac), p_eventLoop(&m_BO, this), p_mainELRef(&p_eventLoop)
 {
-    p_eventLoopRef = &p_eventLoop;
-    p_mainWindow = this;
+    // Create new ELRef
+    p_eventLoopRef = &p_mainELRef;
 
+    p_mainWindow = this;
     p_eventLoop.Start();
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow()
+{}
 
 
 uintptr_t MainWindow::Dispatcher(std::shared_ptr<Event> event)

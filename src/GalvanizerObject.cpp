@@ -8,22 +8,31 @@ using namespace Galvanizer;
 using namespace EventConfiguration;
 
 
-GObjHNDL GalvanizerObject::factory(std::string_view name, GObjHNDL parent)
+GObjHNDL GalvanizerObject::factory(std::string_view name, GObjHNDL parent,
+                                   Factory* originFac)
 {
-    return new GalvanizerObject(name, parent);
+    return new GalvanizerObject(name, parent, originFac);
 }
 
-GalvanizerObject::GalvanizerObject(std::string_view name, GObjHNDL parent)
-    : p_parent(parent), p_name(name)
+GalvanizerObject::GalvanizerObject(std::string_view name, GObjHNDL parent, Factory* originFac)
+    : p_parent(parent), pc_internalName(name), p_displayName(name), m_originFac(originFac)
 {
+    std::cout << "[DEBUG] " << pc_internalName << " created on " << std::this_thread::get_id() << std::endl;
+
     if (parent)
+    {
+        parent->p_children.push_back(this);
         p_eventLoopRef = parent->p_eventLoopRef;
+    }
 }
 
 GalvanizerObject::~GalvanizerObject()
 {
     for (auto ch: p_children)
         delete ch;
+
+    if (m_originFac)
+        m_originFac->built = false;
 }
 
 
@@ -43,10 +52,10 @@ uintptr_t GalvanizerObject::Dispatcher(std::shared_ptr<Event> event)
         for (auto ch: p_children)
         {
             // If the child is on another thread, add the event to its queue and continue
-            if (ch->p_eventLoopRef == p_eventLoopRef)
-                ch->Dispatcher(event);
-            else
+            if (ch->p_eventLoopRef != p_eventLoopRef)
                 ch->PostEvent(event);
+            else
+                ch->Dispatcher(event);
         }
 
         if (event->priority == ChildPriority::First)
@@ -63,7 +72,7 @@ uintptr_t GalvanizerObject::Dispatcher(std::shared_ptr<Event> event)
 
 uintptr_t GalvanizerObject::Callback(std::shared_ptr<Event> event)
 {
-    std::cout << "[DEBUG::" << getTarget()
+    std::cout << "[DEBUG::" << GetTarget()
               << " in GalvanizerObject::Callback] Event: " << event->strMessage() << std::endl;
 
     if (event->IsType<ObjectEvent>())
@@ -73,32 +82,56 @@ uintptr_t GalvanizerObject::Callback(std::shared_ptr<Event> event)
         {
         case ObjectMessage::Init:
         {
-            Application::get().Build(getTarget());
             break;
         }
 
         case ObjectMessage::Close:
         {
+            auto terminate = CreateObjectEvent<ObjectMessage::Terminate>(this);
             if (p_parent)
-            {
-                auto terminate = CreateObjectEvent<ObjectMessage::Terminate>(this);
                 p_parent->PostEvent(terminate);
-            }
+            else
+                PostEvent(terminate);
 
             break;
         }
 
         case ObjectMessage::Terminate:
         {
-            Application::get().Deconstruct(objectEvent.objHndl);
+            for (size_t i = 0; i < p_children.size(); i++)
+            {
+                if (p_children[i] != objectEvent.objHndl)
+                    continue;
+
+                p_children.erase(p_children.begin() + i);
+                break;
+            }
+
+            delete objectEvent.objHndl;
+            break;
+        }
+
+        case ObjectMessage::Run:
+        {
+            ObjectFactories::GetInstance().Build(this);
+            //Application::get().Build(GetTarget());
             break;
         }
 
         case ObjectMessage::Empty:
-        case ObjectMessage::Run:
             break;
         }
     }
+
+    else if (event->IsType<ELEvent>())
+    {
+        auto elEvent = static_cast<ELEvent&>(*event);
+
+        // If current thread is not the same as the thread of the parent object, stop the current thread
+        if (elEvent.message == ELMessage::Stop && p_parent && p_eventLoopRef != p_parent->p_eventLoopRef)
+            p_eventLoopRef->swap(p_parent->p_eventLoopRef);
+    }
+
     return 0;
 }
 
@@ -107,7 +140,7 @@ GObjHNDL GalvanizerObject::FindChild(std::string_view name)
 {
     for (const auto& win: p_children)
     {
-        if (win->p_name == name)
+        if (win->pc_internalName == name)
             return win;
     }
 
@@ -115,40 +148,24 @@ GObjHNDL GalvanizerObject::FindChild(std::string_view name)
 }
 
 
-std::string GalvanizerObject::getPath() const
+std::string GalvanizerObject::GetPath() const
 {
-    if (p_parent)
-    {
-        if (!p_parent->p_parent)
-            return "";
-        else
-            return p_parent->getTarget();
-    }
-    else
+    if (!p_parent)
         return "";
+    else
+        return p_parent->GetTarget();
 }
 
-std::string GalvanizerObject::getTarget() const
+std::string GalvanizerObject::GetTarget() const
 {
-    if (p_parent)
-    {
-        if (!p_parent->p_parent)
-            return p_name;
-        else
-            return p_parent->getTarget() + "." + p_name;
-    }
+    if (!p_parent)
+        return pc_internalName;
     else
-        return "";
+        return p_parent->GetTarget() + "." + pc_internalName;
 }
 
 
 void GalvanizerObject::PostEvent(std::shared_ptr<Event> event)
 {
-    if (DEBUG_LOG_LVL >= 1 && !p_eventLoopRef)
-    {
-        std::cout << "[ERROR]: Object (" << this << "): p_eventLoopRef is null!" << std::endl;
-        return;
-    }
-
     p_eventLoopRef->PostEvent(event, this);
 }

@@ -2,20 +2,16 @@
 
 #include <vector>
 #include <string>
+#include <mutex>
 
-
-/*
-    [TODO]: Convert tree structure into a tape with indexes
-*/
 
 namespace Galvanizer
 {
-
-
 // [NOTE] Possibly convert to a template class
 class GalvanizerObject;
+struct Factory;
 using GObjHNDL = GalvanizerObject*;
-using GObjFactoryPtr = GObjHNDL(*)(std::string_view name, GObjHNDL parent);
+using GObjFactoryPtr = GObjHNDL(*)(std::string_view name, GObjHNDL parent, Factory* originFac);
 
 
 struct Factory
@@ -26,7 +22,9 @@ struct Factory
     ~Factory();
 
 
-    Factory* Find(std::string_view name);
+    Factory* FindChild(std::string_view facName);
+
+    void Reset();
 
     bool active = true;
     bool built = false;
@@ -37,15 +35,15 @@ struct Factory
     // If two or more factories have the same name, but overridesOwner does not match any ownerName,
     // the build command will fail to build the current namespace.
     // Example:
-    // 
+    //
     // name = "app.SimpleWindow"
     // overridesOwner = ""
-    // 
+    //
     // name = "plg.SimpleWindow"
     // overridesOwner = ""  ->> fail state: name conflict (SimpleWindow) without override specifier
-    // 
+    //
     // However, if overridesOwner is specified but the ownerName with that name doesn't exist, build command
-    // wont build the object. This can occur in case dependency plugin is not loaded or the "app" is misspelled
+    // won't build the object. This can occur in case dependency plugin is not loaded or the "app" is misspelled
     // eg: "aap". Optional "debug" flag can be set to emit a warning in this case.
     std::string overridesOwner;
 
@@ -64,11 +62,41 @@ struct Factory
 // Has to be heap allocated since we are taking pointers directly from this
 struct FactoryRoot
 {
-    std::string ownerName;
-    Factory factory = Factory("root", &ownerName);
+    FactoryRoot() = default;
+    explicit FactoryRoot(std::string_view ownerName);
 
-    bool operator==(std::string_view testOwner) const;
+    std::string ownerName;
+    Factory factory = Factory("root-node", &ownerName);
 };
 
 
+class ObjectFactories
+{
+public:
+    ObjectFactories(const ObjectFactories&) = delete;
+    ObjectFactories operator=(const ObjectFactories&) = delete;
+    static ObjectFactories& GetInstance();
+
+    static void Init();
+    static void Shutdown();
+
+    // target -> path + name
+
+    Factory* Find(std::string_view target, std::string_view owner);
+    Factory* Get(std::string_view target);
+    Factory* Get(std::string_view target, std::string_view owner);
+    std::vector<std::string_view> GetFacNames(std::string_view path);
+
+    bool CreateOwner(std::string_view owner);
+
+    std::vector<GObjHNDL> Build(GObjHNDL pathObj);
+
+private:
+    ObjectFactories();
+
+    std::recursive_mutex m_accessMutex;
+    std::vector<FactoryRoot*> m_facRoots;
+
+    std::string m_defaultOwnerName;
+};
 }

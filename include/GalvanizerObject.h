@@ -1,14 +1,15 @@
 #pragma once
 
 #include <string_view>
+#include <memory>
 
 #include "Events.h"
 #include "EventLoop.h"
 
 namespace Galvanizer
 {
-
 class GalvanizerObject;
+struct Factory;
 
 using GObjHNDL = GalvanizerObject*;
 
@@ -16,39 +17,44 @@ using GObjHNDL = GalvanizerObject*;
 class GalvanizerObject
 {
 public:
-    static GObjHNDL factory(std::string_view name, GObjHNDL parent);
+    GalvanizerObject(std::string_view name, GObjHNDL parent, Factory* originFac);
+    static GObjHNDL factory(std::string_view name, GObjHNDL parent,
+                            Factory* originFac);
     virtual ~GalvanizerObject();
 
     virtual uintptr_t Dispatcher(std::shared_ptr<Event> event);
     virtual uintptr_t Callback(std::shared_ptr<Event> event);
 
-    [[nodiscard]] inline std::string_view getName() const
-    { return p_name; }
+    [[nodiscard]] inline std::string_view GetInternalName() const
+    {
+        return pc_internalName;
+    }
 
-    [[nodiscard]] inline GObjHNDL getParent() const
-    { return p_parent; }
+    [[nodiscard]] inline std::string_view GetDisplayName() const
+    {
+        return p_displayName;
+    }
 
-    [[nodiscard]] std::string getPath() const;
-    [[nodiscard]] std::string getTarget() const;
+    [[nodiscard]] inline GObjHNDL GetParent() const
+    {
+        return p_parent;
+    }
+
+    [[nodiscard]] std::string GetPath() const;
+    [[nodiscard]] std::string GetTarget() const;
     GObjHNDL FindChild(std::string_view name);
 
     void PostEvent(std::shared_ptr<Event> event);
 
 protected:
-    GalvanizerObject(std::string_view name, GObjHNDL parent);
-
-protected:
     GObjHNDL p_parent = nullptr;
     std::vector<GObjHNDL> p_children;
-    std::string p_name;
+    const std::string pc_internalName;
+    std::string p_displayName;
 
-    EventLoop* p_eventLoopRef = nullptr;
-
+    EventLoopRef* p_eventLoopRef = nullptr;
 
 private:
-    // Needed for Application::Build() function to add child elements and
-    // Application::Destruct() function to remove child elements
-    friend class Application;
+    Factory* m_originFac = nullptr;
 };
-
 }

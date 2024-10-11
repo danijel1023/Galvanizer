@@ -18,6 +18,9 @@ EventLoop::~EventLoop()
 
 void EventLoop::Start()
 {
+    auto empty = CreateELEvent<ELMessage::Run>();
+    PostEvent(empty, nullptr);
+
     if (!m_async)
     {
         std::cout << "[INFO] Running loop in sync-mode: " << std::this_thread::get_id() << std::endl;
@@ -37,7 +40,7 @@ void EventLoop::Stop()
     if (m_running)
     {
         m_running = false;
-        auto empty = CreateObjectEvent<ObjectMessage::Empty>();
+        auto empty = CreateELEvent<ELMessage::Stop>();
         PostEvent(empty, nullptr);
 
         if (m_async)
@@ -46,7 +49,7 @@ void EventLoop::Stop()
 }
 
 
-void EventLoop::PostEvent(std::shared_ptr<Event> event, GObjHNDL receiver)
+void EventLoop::PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver)
 {
     event->receiver = receiver;
     m_queue.PostEvent(event);
@@ -79,8 +82,11 @@ void EventLoop::Loop()
 
             case EventVisibility::Global:
             {
+                std::cout << "[WARNING] This is not a true global event - missing definition for what \"Global\" means."
+                          << std::endl;
                 // [TODO - IMPORTANT] This will not send the event to the actual "Global" root! Make mechanism for
                 // signaling the global root hndl
+
                 dispResult = m_dispatchRef->Dispatcher(event);
                 break;
             }
@@ -105,4 +111,37 @@ void EventLoop::Loop()
             }
         }
     }
+
+    std::cout << "[INFO] Exiting event loop: " << std::this_thread::get_id() << std::endl;
+}
+
+
+EventLoopRef::EventLoopRef(EventLoop* eventLoop)
+    : m_ELRef(eventLoop)
+{}
+
+
+void EventLoopRef::swap(EventLoopRef* eventLoop)
+{
+    std::lock_guard lck(m_refMutex);
+    if (m_ELRef)
+        m_ELRef->Stop();
+
+    if (eventLoop)
+        m_ELRef = eventLoop->m_ELRef;
+    else
+        m_ELRef = nullptr;
+}
+
+void EventLoopRef::Stop()
+{
+    swap(nullptr);
+}
+
+void EventLoopRef::PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver)
+{
+    std::lock_guard lck(m_refMutex);
+
+    if (m_ELRef)
+        m_ELRef->PostEvent(event, receiver);
 }

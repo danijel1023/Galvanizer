@@ -20,7 +20,8 @@ public:
 };
 
 
-class BlockingObject : public IBlockingObject
+class BlockingObject
+    : public IBlockingObject
 {
 public:
     void WaitForEvent() override;
