@@ -3,17 +3,22 @@
 #include "Application.h"
 
 #include "../include/SimpleWindow.h"
+#include "../include/SimpleChild.h"
 
 
 using namespace Galvanizer;
 
+
 int main()
 {
-    Application& app = Application::get();
+    ObjectFactories::Init();
+
+    int returnVal = 0;
+    Application app;
     //app.EnablePlugins(Application::DefaultPluginLocation);
 
-    std::string SWFactory = "SimpleWindow";
-    Factory* factory = app.GetFactory(SWFactory);
+    std::string SWFactory = "app.SimpleWindow";
+    Factory* factory = ObjectFactories::GetInstance().Get(SWFactory);
 
     if (!factory)
     {
@@ -23,5 +28,11 @@ int main()
 
     factory->ptr = &SimpleWindow::factory;
 
-    return app.Run();
+    Factory* chFac = ObjectFactories::GetInstance().Get("app.SimpleWindow.child-0");
+    chFac->ptr = &SimpleChild::factory;
+
+    returnVal = app.Run();
+
+    ObjectFactories::Shutdown();
+    return returnVal;
 }

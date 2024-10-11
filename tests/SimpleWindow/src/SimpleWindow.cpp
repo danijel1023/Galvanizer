@@ -10,23 +10,17 @@
 using namespace Galvanizer;
 using namespace EventConfiguration;
 
-Galvanizer::GObjHNDL SimpleWindow::factory(std::string_view name, GObjHNDL parent)
+Galvanizer::GObjHNDL SimpleWindow::factory(std::string_view name, GObjHNDL parent, Factory* originFac)
 {
-    return new SimpleWindow(name, parent);
+    return new SimpleWindow(name, parent, originFac);
 }
 
-SimpleWindow::SimpleWindow(std::string_view name, GObjHNDL parent)
-    : Galvanizer::MainWindow(name, parent)
+SimpleWindow::SimpleWindow(std::string_view name, GObjHNDL parent, Factory* originFac)
+    : Galvanizer::MainWindow(name, parent, originFac)
 {}
 
 SimpleWindow::~SimpleWindow()
-{
-    std::cout << "SimpleWindow destructor!" << std::endl;
-
-    std::cout << "Posting Close signal to application." << std::endl;
-    auto close = CreateObjectEvent<ObjectMessage::Close>();
-    Application::get().PostEvent(close);
-}
+{}
 
 
 uintptr_t SimpleWindow::Callback(std::shared_ptr<Event> event)
@@ -37,19 +31,23 @@ uintptr_t SimpleWindow::Callback(std::shared_ptr<Event> event)
 
         if (objEvent.message == ObjectMessage::Init)
         {
-            Factory* originalFac = Application::get().GetFactory(getTarget() + ".org");
+            Factory* originalFac = ObjectFactories::GetInstance().Get(GetTarget() + ".org");
             originalFac->ptr = &SimpleChild::factory;
 
 
-            Factory* pluginFac = Application::get().GetFactory(getTarget() + ".org", "plg");
+            ObjectFactories::GetInstance().CreateOwner("plg");
+            Factory* pluginFac = ObjectFactories::GetInstance().Get(GetTarget() + ".org", "plg");
             pluginFac->ptr = &PluginWindow::factory;
             pluginFac->overridesOwner = "app";
         }
 
         else if (objEvent.message == ObjectMessage::Run)
         {
+            std::cout << "====================================" << std::endl;
+            std::cout << "Posting Close signal to application." << std::endl;
+
             auto close = CreateObjectEvent<ObjectMessage::Close>();
-            PostEvent(close);
+            Application::get().PostEvent(close);
         }
     }
 

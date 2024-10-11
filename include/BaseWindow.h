@@ -22,8 +22,8 @@ class BaseWindow
     : public GalvanizerObject
 {
 public:
-    static GObjHNDL factory(std::string_view name, GObjHNDL parent);
-    virtual ~BaseWindow();
+    static GObjHNDL factory(std::string_view name, GObjHNDL parent, Factory* originFac);
+    ~BaseWindow() override;
 
 
     uintptr_t Callback(std::shared_ptr<Event> event) override;
@@ -33,7 +33,7 @@ public:
     Vec2 size, pos;
 
 protected:
-    BaseWindow(std::string_view name, GObjHNDL parent);
+    BaseWindow(std::string_view name, GObjHNDL parent, Factory* originFac);
 
 protected:
     WinHNDL p_mainWindow = nullptr;

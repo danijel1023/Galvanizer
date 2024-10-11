@@ -10,14 +10,14 @@ using namespace Galvanizer;
 using namespace EventConfiguration;
 
 
-GObjHNDL BaseWindow::factory(std::string_view name, GObjHNDL parent)
+GObjHNDL BaseWindow::factory(std::string_view name, GObjHNDL parent, Factory* originFac)
 {
-    return new BaseWindow(name, parent);
+    return new BaseWindow(name, parent, originFac);
 }
 
 
-BaseWindow::BaseWindow(std::string_view name, GObjHNDL parentObj)
-    : GalvanizerObject(name, parentObj)
+BaseWindow::BaseWindow(std::string_view name, GObjHNDL parentObj, Factory* originFac)
+    : GalvanizerObject(name, parentObj, originFac)
 {
     auto parent = dynamic_cast<BWinHNDL>(parentObj);
 

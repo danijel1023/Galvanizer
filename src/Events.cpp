@@ -116,3 +116,17 @@ std::string AppEvent::strMessage()
         return "AppEvent::UnknownMessage";
     }
 }
+
+std::string ELEvent::strMessage()
+{
+    switch (message)
+    {
+    case ELMessage::Run:
+        return "ELMessage::Run";
+    case ELMessage::Stop:
+        return "ELMessage::Stop";
+
+    default:
+        return "ELMessage::UnknownMessage";
+    }
+}

@@ -40,10 +40,9 @@ namespace Galvanizer
 
 class GalvanizerObject;
 
-using GObjHNDL = GalvanizerObject*;
-
 class MainWindow;
 
+using GObjHNDL = GalvanizerObject*;
 using WinHNDL = MainWindow*;
 
 
@@ -96,6 +95,7 @@ enum class EventVisibility
 {
     Unset, Global, Root, Single
 };
+
 enum class ChildPriority
 {
     First, Last
@@ -130,7 +130,10 @@ protected:
 
 enum class ObjectMessage
 {
-    Init, Run, Close, Terminate, Empty
+    Init, Run,
+    // Do not rely on Close event being sent always. Use Terminate instead!
+    Close,
+    Terminate, Empty
 };
 
 struct ObjectEvent
@@ -145,10 +148,27 @@ EVENT_REGISTRATION_INTERFACE(ObjectEvent);
 };
 
 
+enum class ELMessage
+{
+    Run, Stop
+};
+
+struct ELEvent
+    : public Event
+{
+EVENT_REGISTRATION_INTERFACE(ELEvent);
+
+    std::string strMessage() override;
+
+    ELMessage message = {};
+};
+
+
 enum class KeyAction
 {
     Up, Down, Repeat
 };
+
 enum class KeyMessage
 {
     Key, Text
@@ -172,6 +192,7 @@ enum class MouseButton
 {
     R, M, L
 };
+
 enum class MouseMessage
 {
     Down, Up,
@@ -249,6 +270,7 @@ EVENT_REGISTRATION_INTERFACE(AppEvent)
     AppMessage message = {};
 
     void (* funcPtr)() = nullptr;
+
     WinHNDL winHndl = nullptr;
 };
 

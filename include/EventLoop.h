@@ -23,7 +23,7 @@ public:
     void Stop();
 
     // Thread safe
-    void PostEvent(std::shared_ptr<Event> event, GObjHNDL receiver);
+    void PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver);
 
 private:
     Queue m_queue;
@@ -37,6 +37,21 @@ private:
 
 private:
     void Loop();
+};
+
+
+class EventLoopRef
+{
+public:
+    explicit EventLoopRef(EventLoop* eventLoop);
+
+    void swap(EventLoopRef* eventLoop);
+    void Stop();
+    void PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver);
+
+private:
+    std::mutex m_refMutex;
+    EventLoop* m_ELRef = nullptr;
 };
 
 }

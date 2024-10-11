@@ -10,7 +10,8 @@ namespace Galvanizer::EventConfiguration
 
 template<WindowMessage msg>
 struct WindowMessageTag
-{};
+{
+};
 
 //void ConfigWindowEvent(WindowMessageTag<WindowMessage::Close>, std::shared_ptr<WindowEvent> event, BWinHNDL win);
 
@@ -25,7 +26,8 @@ std::shared_ptr<WindowEvent> CreateWindowEvent(Args&& ... args)
 
 template<ObjectMessage msg>
 struct ObjectMessageTag
-{};
+{
+};
 
 void ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Init> tag, std::shared_ptr<ObjectEvent> event);
 void ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Run> tag, std::shared_ptr<ObjectEvent> event);
@@ -45,7 +47,8 @@ std::shared_ptr<ObjectEvent> CreateObjectEvent(Args&& ... args)
 
 template<AppMessage msg>
 struct AppMessageTag
-{};
+{
+};
 
 void ConfigAppEvent(AppMessageTag<AppMessage::Nothing>, std::shared_ptr<AppEvent> event);
 
@@ -57,4 +60,23 @@ std::shared_ptr<AppEvent> CreateAppEvent(Args&& ... args)
     ConfigAppEvent(AppMessageTag<msg>(), event, std::forward<Args>(args)...);
     return event;
 }
+
+
+template<ELMessage msg>
+struct ELMessageTag
+{
+};
+
+void ConfigELEvent(ELMessageTag<ELMessage::Stop>, std::shared_ptr<ELEvent> event);
+void ConfigELEvent(ELMessageTag<ELMessage::Run>, std::shared_ptr<ELEvent> event);
+
+template<ELMessage msg, typename... Args>
+std::shared_ptr<ELEvent> CreateELEvent(Args&& ... args)
+{
+    auto event = std::make_shared<ELEvent>();
+    event->message = msg;
+    ConfigELEvent(ELMessageTag<msg>(), event, std::forward<Args>(args)...);
+    return event;
+}
+
 }

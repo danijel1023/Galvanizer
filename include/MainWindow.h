@@ -9,17 +9,18 @@
 namespace Galvanizer
 {
 
-class MainWindow : public BaseWindow
+class MainWindow
+    : public BaseWindow
 {
 public:
-    static GObjHNDL factory(std::string_view name, GObjHNDL parent);
+    static GObjHNDL factory(std::string_view name, GObjHNDL parent, Factory* originFac);
     ~MainWindow() override;
 
     uintptr_t Dispatcher(std::shared_ptr<Event> event) override;
     uintptr_t Callback(std::shared_ptr<Event> event) override;
 
 protected:
-    MainWindow(std::string_view name, GObjHNDL parent);
+    MainWindow(std::string_view name, GObjHNDL parent, Factory* originFac);
 
 
 private:
@@ -27,6 +28,8 @@ private:
 
 protected:
     EventLoop p_eventLoop;
+    EventLoopRef p_mainELRef;
+    EventLoopRef* p_parentELRef = nullptr;
 };
 
 }

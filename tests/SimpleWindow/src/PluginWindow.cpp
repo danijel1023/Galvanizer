@@ -5,14 +5,14 @@
 using namespace Galvanizer;
 
 
-GObjHNDL PluginWindow::factory(std::string_view name, GObjHNDL parent)
+GObjHNDL PluginWindow::factory(std::string_view name, GObjHNDL parent, Factory* originFac)
 {
-    std::cout << "PluginWindow factory as: " << parent->getPath() + '.' + std::string(name) << std::endl;
-    return new PluginWindow(name, parent);
+    std::cout << "PluginWindow factory as: " << parent->GetTarget() << std::endl;
+    return new PluginWindow(name, parent, originFac);
 }
 
-PluginWindow::PluginWindow(std::string_view name, GObjHNDL parent)
-    : BaseWindow(name, parent)
+PluginWindow::PluginWindow(std::string_view name, GObjHNDL parent, Factory* originFac)
+    : BaseWindow(name, parent, originFac)
 {}
 
 PluginWindow::~PluginWindow()
