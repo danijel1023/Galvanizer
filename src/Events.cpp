@@ -52,8 +52,6 @@ std::string ObjectEvent::strMessage()
     {
     case ObjectMessage::Init:
         return "ObjectEvent::Init";
-    case ObjectMessage::Run:
-        return "ObjectEvent::Run";
     case ObjectMessage::Close:
         return "ObjectEvent::Close";
     case ObjectMessage::Terminate:

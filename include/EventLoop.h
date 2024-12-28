@@ -2,13 +2,13 @@
 
 #include <thread>
 #include <atomic>
+#include <condition_variable>
 
 #include "Queue.h"
 
 
 namespace Galvanizer
 {
-
 class GalvanizerObject;
 using GObjHNDL = GalvanizerObject*;
 
@@ -24,6 +24,7 @@ public:
 
     // Thread safe
     void PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver);
+    bool Running() { return m_running; }
 
 private:
     Queue m_queue;
@@ -35,7 +36,10 @@ private:
 
     GObjHNDL m_dispatchRef;
 
-private:
+    std::condition_variable m_cv;
+    std::mutex m_mtx;
+    bool m_started = false;
+
     void Loop();
 };
 
@@ -45,13 +49,22 @@ class EventLoopRef
 public:
     explicit EventLoopRef(EventLoop* eventLoop);
 
-    void swap(EventLoopRef* eventLoop);
+    void set(EventLoopRef* eventLoop);
     void Stop();
+
+    // Will drop events while switching event loop reference
     void PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver);
 
-private:
-    std::mutex m_refMutex;
-    EventLoop* m_ELRef = nullptr;
-};
+    // [WARN] Not thread safe!
+    bool operator==(const EventLoopRef& right) const
+    {
+        return m_ELRef == right.m_ELRef;
+    }
 
+private:
+    EventLoop* m_ELRef = nullptr;
+
+    std::mutex m_stopMutex;
+    bool m_stopping = false;
+};
 }

@@ -7,32 +7,48 @@
 
 
 using namespace Galvanizer;
-
+namespace ch = std::chrono;
 
 int main()
 {
-    ObjectFactories::Init();
+    ch::steady_clock::time_point start = ch::steady_clock::now();
 
-    int returnVal = 0;
-    Application app;
-    //app.EnablePlugins(Application::DefaultPluginLocation);
-
-    std::string SWFactory = "app.SimpleWindow";
-    Factory* factory = ObjectFactories::GetInstance().Get(SWFactory);
-
-    if (!factory)
+    for (int i = 0; i < 500; i++)
     {
-        std::cout << "[ERROR] Unable to get \"" << SWFactory << "\" factory!" << std::endl;
-        return -1;
+        ObjectFactories::Init();
+
+        Application app;
+        //app.EnablePlugins(Application::DefaultPluginLocation);
+
+        std::string SWFactory = "app.SimpleWindow";
+        Factory* factory = ObjectFactories::GetInstance().Get(SWFactory);
+
+        if (!factory)
+        {
+            std::cout << "[ERROR] Unable to get \"" << SWFactory << "\" factory!" << std::endl;
+            return -1;
+        }
+
+        factory->ptr = &SimpleWindow::factory;
+
+
+        Factory* ch1Fac = ObjectFactories::GetInstance().Get("app.SimpleWindow.child-1");
+        ch1Fac->ptr = &SimpleChild::factory;
+
+        Factory* ch0Fac = ObjectFactories::GetInstance().Get("app.SimpleWindow.child-0");
+        ch0Fac->ptr = &SimpleChild::factory;
+
+
+        app.Run();
+
+        ObjectFactories::Shutdown();
+
+        std::cout << std::endl << "*=* *=* *=* *=* *=* *=* *=* *=* Shutting down iteration: " << i <<
+                " *=* *=* *=* *=* *=* *=* *=* *=*" << std::endl << std::endl;
     }
 
-    factory->ptr = &SimpleWindow::factory;
+    ch::steady_clock::time_point end = ch::steady_clock::now();
 
-    Factory* chFac = ObjectFactories::GetInstance().Get("app.SimpleWindow.child-0");
-    chFac->ptr = &SimpleChild::factory;
-
-    returnVal = app.Run();
-
-    ObjectFactories::Shutdown();
-    return returnVal;
+    std::cerr << "Finished execution in " << ch::duration_cast<ch::milliseconds>(end - start).count() << "ms" <<
+            std::endl;
 }

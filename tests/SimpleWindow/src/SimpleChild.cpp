@@ -7,29 +7,18 @@
 using namespace Galvanizer;
 
 
-GObjHNDL SimpleChild::factory(std::string_view name, GObjHNDL parent, Factory* originFac)
+GObjHNDL SimpleChild::factory(std::string_view name, const WeakRef& parent, Factory* originFac)
 {
     return new SimpleChild(name, parent, originFac);
 }
 
-SimpleChild::~SimpleChild()
-{}
+SimpleChild::SimpleChild(const std::string_view name, const WeakRef& parent, Factory* originFac)
+    : BaseWindow(name, parent, originFac) {}
 
-uintptr_t SimpleChild::Callback(std::shared_ptr<Event> event)
+
+SimpleChild::~SimpleChild() = default;
+
+uintptr_t SimpleChild::Callback(const std::shared_ptr<Event>& event)
 {
-    if (event->IsType<ObjectEvent>())
-    {
-        ObjectEvent& objEvent = static_cast<ObjectEvent&>(*event);
-        switch (objEvent.message)
-        {
-        default:
-            break;
-        }
-    }
-
     return BaseWindow::Callback(event);
 }
-
-SimpleChild::SimpleChild(std::string_view name, GObjHNDL parent, Factory* originFac)
-    : BaseWindow(name, parent, originFac)
-{}

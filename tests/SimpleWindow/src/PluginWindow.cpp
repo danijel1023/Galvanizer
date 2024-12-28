@@ -5,21 +5,20 @@
 using namespace Galvanizer;
 
 
-GObjHNDL PluginWindow::factory(std::string_view name, GObjHNDL parent, Factory* originFac)
+GObjHNDL PluginWindow::factory(std::string_view name, const WeakRef& parent, Factory* originFac)
 {
-    std::cout << "PluginWindow factory as: " << parent->GetTarget() << std::endl;
+    // Hopefully parent is not null :>
+    std::cout << "PluginWindow factory as: " << parent.lock()->GetTarget() << "." << name << std::endl << std::endl;
     return new PluginWindow(name, parent, originFac);
 }
 
-PluginWindow::PluginWindow(std::string_view name, GObjHNDL parent, Factory* originFac)
-    : BaseWindow(name, parent, originFac)
-{}
+PluginWindow::PluginWindow(const std::string_view name, const WeakRef& parent, Factory* originFac)
+    : MainWindow(name, parent, originFac) {}
 
-PluginWindow::~PluginWindow()
-{}
+PluginWindow::~PluginWindow() = default;
 
-uintptr_t PluginWindow::Callback(std::shared_ptr<Event> event)
+
+uintptr_t PluginWindow::Callback(const std::shared_ptr<Event>& event)
 {
-    return BaseWindow::Callback(event);
+    return MainWindow::Callback(event);
 }
-

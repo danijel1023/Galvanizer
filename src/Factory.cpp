@@ -15,20 +15,18 @@ Factory::Factory(std::string_view name, Factory* parent)
 }
 
 Factory::Factory(std::string_view name, std::string* rootOwner)
-    : name(name), parent(nullptr), rootOwner(rootOwner)
-{
-}
+    : name(name), parent(nullptr), rootOwner(rootOwner) {}
 
 Factory::~Factory()
 {
-    for (auto& ch : children)
+    for (auto& ch: children)
         delete ch;
 }
 
 
 Factory* Factory::FindChild(std::string_view facName)
 {
-    for (const auto& ch : children)
+    for (const auto& ch: children)
         if (ch->name == facName)
             return ch;
 
@@ -44,9 +42,7 @@ void Factory::Reset()
 
 
 FactoryRoot::FactoryRoot(std::string_view ownerName)
-    : ownerName(ownerName)
-{
-}
+    : ownerName(ownerName) {}
 
 
 static ObjectFactories* s_ObjFacInstance = nullptr;
@@ -115,13 +111,14 @@ Factory* ObjectFactories::Find(const std::string_view target, const std::string_
     }
 
     Factory* currentFactory = &m_facRoots[ownerIndex]->factory;
-    for (const auto& key : keys)
+    for (const auto& key: keys)
     {
         currentFactory = currentFactory->FindChild(key);
 
         if (!currentFactory)
         {
-            std::cout << "[INFO] No factory object found at \"" << key << "\" in \"" << target << "\"" << std::endl;
+            std::cout << "[INFO] No factory object found at \"" << key << "\" in \"" << target << "\" with owner " <<
+                    owner << std::endl;
             return nullptr;
         }
     }
@@ -161,22 +158,26 @@ Factory* ObjectFactories::Get(const std::string_view target, const std::string_v
 
     std::vector<std::string> keys = Utility::ExtractKeys(target);
 
+
     Factory* currentFactory = &m_facRoots[ownerIndex]->factory;
-    for (const auto& key : keys)
+    std::cout << "[INFO] For target \"" << *(currentFactory->rootOwner) << ":" << target << "\" -----" << std::endl;
+
+    for (const auto& key: keys)
     {
         Factory* chFactory = currentFactory->FindChild(key);
 
         if (!chFactory)
         {
-            std::cout << "[INFO] Creating factory \"" << key << "\" at namespace \"" << currentFactory->name
-                << "\" at owner \"" << *(currentFactory->rootOwner) << "\" for target \"" << target << "\""
-                << std::endl;
+            std::cout << "Creating factory \"" << key << "\" at namespace \"" << currentFactory->name << "\"" <<
+                    std::endl;
 
             chFactory = new Factory(key, currentFactory);
         }
 
         currentFactory = chFactory;
     }
+
+    std::cout << std::endl;
 
     return currentFactory;
 }
@@ -187,8 +188,11 @@ std::vector<std::string_view> ObjectFactories::GetFacNames(std::string_view path
     return {};
 }
 
-std::vector<GObjHNDL> ObjectFactories::Build(GObjHNDL pathObj)
+std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj)
 {
+    if (pathObj->Closing())
+        return {}; // Drop build requests if its closing
+
     std::lock_guard lck(m_accessMutex);
 
     const std::string path = pathObj->GetTarget();
@@ -202,7 +206,7 @@ std::vector<GObjHNDL> ObjectFactories::Build(GObjHNDL pathObj)
 
     std::vector<FacListNode> factories;
 
-    for (const auto& owner : m_facRoots)
+    for (const auto& owner: m_facRoots)
     {
         // FindChild the factory corresponding to "path" (current 'parent')
         Factory* parent = Find(path, owner->ownerName);
@@ -212,7 +216,7 @@ std::vector<GObjHNDL> ObjectFactories::Build(GObjHNDL pathObj)
             continue;
 
         // Add all children the paren has; per owner
-        for (const auto& ch : parent->children)
+        for (const auto& ch: parent->children)
         {
             if (!ch->built && ch->active && ch->ptr)
                 factories.emplace_back(ch, -1);
@@ -240,13 +244,19 @@ std::vector<GObjHNDL> ObjectFactories::Build(GObjHNDL pathObj)
 
         for (size_t overrideElm = 0; overrideElm < factories.size(); overrideElm++)
         {
+            // Find a name match
+            if (factories[current].fac->name != factories[overrideElm].fac->name)
+                continue;
+
+            // Verify that it overrides the correct owner
             if (factories[current].fac->overridesOwner != *factories[overrideElm].fac->rootOwner)
                 continue;
 
-            if (factories[overrideElm].index != static_cast<size_t>(-1))
+            // Check if multiple overrides are present for same owner and name
+            if (factories[current].index != static_cast<size_t>(-1))
             {
                 std::cout << "[ERROR] Two or more factories are trying to override same factory: "
-                    << factories[current].fac->name << " on path: " << path << std::endl;
+                        << factories[current].fac->name << " on path: " << path << std::endl;
 
                 return {};
             }
@@ -267,8 +277,8 @@ std::vector<GObjHNDL> ObjectFactories::Build(GObjHNDL pathObj)
         size_t slowPtr = factories[i].index;
 
         while (fastPtr != static_cast<size_t>(-1)
-            && slowPtr != static_cast<size_t>(-1)
-            && factories[fastPtr].index != static_cast<size_t>(-1))
+               && slowPtr != static_cast<size_t>(-1)
+               && factories[fastPtr].index != static_cast<size_t>(-1))
         {
             slowPtr = factories[slowPtr].index;
             fastPtr = factories[factories[fastPtr].index].index;
@@ -283,19 +293,19 @@ std::vector<GObjHNDL> ObjectFactories::Build(GObjHNDL pathObj)
     }
 
     // Remove factory pointed by overridesOwner
-    for (auto& fac : factories)
+    for (auto& fac: factories)
     {
         if (fac.index == static_cast<size_t>(-1))
             continue;
 
-        factories[fac.index].fac = nullptr;
+        fac.fac = nullptr;
     }
 
 
     // Print some nice information
     std::cout << "[INFO] Survived factories: ";
     bool firstPrint = true;
-    for (auto WF : factories)
+    for (auto WF: factories)
     {
         if (!WF.fac)
             continue;
@@ -303,24 +313,26 @@ std::vector<GObjHNDL> ObjectFactories::Build(GObjHNDL pathObj)
         if (!firstPrint)
             std::cout << ", ";
 
-        std::cout << "[" << WF.fac->name << ", " << WF.index << "]";
+        std::cout << WF.fac->name << " (" << *(WF.fac->rootOwner) << ")";
         firstPrint = false;
     }
     std::cout << std::endl;
 
 
     // Build the actual objects
-    std::vector<GObjHNDL> builtObjects;
-    for (auto& facElm : factories)
+    std::vector<OwningRef> builtObjects;
+    for (auto& facElm: factories)
     {
         if (facElm.fac && facElm.fac->ptr)
         {
-            // Call facElm (pointer)
-            GObjHNDL hndl = facElm.fac->ptr(facElm.fac->name, pathObj, facElm.fac);
-            hndl->Dispatcher(EventConfiguration::CreateObjectEvent<ObjectMessage::Init>());
+            // Call facElm (pointer) aka. builder factory
+            OwningRef hndl = CreateOwningRef(facElm.fac->ptr(facElm.fac->name, pathObj, facElm.fac));
 
+            // Give the new obj a weak hndl to itself
+            hndl->p_weakSelf = hndl;
+
+            // Send Init event
             builtObjects.push_back(hndl);
-
             facElm.fac->built = true;
         }
     }

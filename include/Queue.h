@@ -2,14 +2,12 @@
 
 #include <queue>
 #include <mutex>
-#include <condition_variable>
-#include <iostream>
+#include <semaphore>
 
 #include "Events.h"
 
 namespace Galvanizer
 {
-
 class IBlockingObject
 {
 public:
@@ -19,18 +17,14 @@ public:
     virtual void Notify() = 0;
 };
 
-
-class BlockingObject
-    : public IBlockingObject
+class BlockingObject : public IBlockingObject
 {
 public:
     void WaitForEvent() override;
     void Notify() override;
 
 private:
-    std::mutex mutex;
-    std::condition_variable CV;
-    bool ready = false;
+    std::binary_semaphore m_semaphore = std::binary_semaphore(0);
 };
 
 
@@ -38,24 +32,22 @@ private:
 class Queue
 {
 public:
-
     // Queue will NOT delete the IBlockingObject. Owner of Queue is responsible for IBO lifetime.
     explicit Queue(IBlockingObject* BO);
     ~Queue() = default;
 
     void WaitForEvent();
 
-    void PostEvent(std::shared_ptr<Event> event);
+    void PostEvent(const std::shared_ptr<Event>& event);
 
     bool Empty();
-    std::shared_ptr<Event> Front();
-    std::shared_ptr<Event> Back();
+    const std::shared_ptr<Event>& Front();
+    const std::shared_ptr<Event>& Back();
     void Pop();
 
 private:
     IBlockingObject* m_BO;
     std::mutex m_QAccessMutex;
-    std::queue<std::shared_ptr<Event>> m_eventQueue;
+    std::queue<std::shared_ptr<Event> > m_eventQueue;
 };
-
 }

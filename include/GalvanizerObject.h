@@ -5,6 +5,8 @@
 
 #include "Events.h"
 #include "EventLoop.h"
+#include "GalvanizerRef.h"
+#include "Factory.h"
 
 namespace Galvanizer
 {
@@ -17,38 +19,30 @@ using GObjHNDL = GalvanizerObject*;
 class GalvanizerObject
 {
 public:
-    GalvanizerObject(std::string_view name, GObjHNDL parent, Factory* originFac);
-    static GObjHNDL factory(std::string_view name, GObjHNDL parent,
-                            Factory* originFac);
+    static GObjHNDL factory(std::string_view name, const WeakRef& parent, Factory* originFac);
     virtual ~GalvanizerObject();
 
-    virtual uintptr_t Dispatcher(std::shared_ptr<Event> event);
-    virtual uintptr_t Callback(std::shared_ptr<Event> event);
+    virtual uintptr_t Dispatcher(const std::shared_ptr<Event>& event);
+    virtual uintptr_t Callback(const std::shared_ptr<Event>& event);
 
-    [[nodiscard]] inline std::string_view GetInternalName() const
-    {
-        return pc_internalName;
-    }
-
-    [[nodiscard]] inline std::string_view GetDisplayName() const
-    {
-        return p_displayName;
-    }
-
-    [[nodiscard]] inline GObjHNDL GetParent() const
-    {
-        return p_parent;
-    }
+    [[nodiscard]] std::string_view GetInternalName() const { return pc_internalName; }
+    [[nodiscard]] std::string_view GetDisplayName() const { return p_displayName; }
+    [[nodiscard]] WeakRef GetParent() const { return p_parent; }
 
     [[nodiscard]] std::string GetPath() const;
     [[nodiscard]] std::string GetTarget() const;
-    GObjHNDL FindChild(std::string_view name);
+    WeakRef FindChild(std::string_view name);
 
-    void PostEvent(std::shared_ptr<Event> event);
+    void PostEvent(const std::shared_ptr<Event>& event);
+
+    bool Closing() const { return m_closing; }
 
 protected:
-    GObjHNDL p_parent = nullptr;
-    std::vector<GObjHNDL> p_children;
+    GalvanizerObject(std::string_view name, const WeakRef& parent, Factory* originFac);
+
+    // p_weakSelf gets set after constructor and before receiving init event
+    WeakRef p_parent, p_weakSelf;
+    std::vector<OwningRef> p_children;
     const std::string pc_internalName;
     std::string p_displayName;
 
@@ -56,5 +50,8 @@ protected:
 
 private:
     Factory* m_originFac = nullptr;
+    bool m_closing = false;
+
+    friend std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj);
 };
 }
