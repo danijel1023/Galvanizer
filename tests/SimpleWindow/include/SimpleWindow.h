@@ -6,18 +6,16 @@
 #include "MainWindow.h"
 
 
-class SimpleWindow
-    : public Galvanizer::MainWindow
+class SimpleWindow : public Galvanizer::MainWindow
 {
 public:
-    static Galvanizer::GObjHNDL factory(std::string_view name, Galvanizer::GObjHNDL parent, Galvanizer::Factory* originFac);
+    static Galvanizer::GObjHNDL factory(std::string_view name, const Galvanizer::WeakRef& parent,
+                                        Galvanizer::Factory* originFac);
     ~SimpleWindow() override;
 
-    uintptr_t Callback(std::shared_ptr<Galvanizer::Event> event) override;
+    uintptr_t Dispatcher(const std::shared_ptr<Galvanizer::Event>& event) override;
+    uintptr_t Callback(const std::shared_ptr<Galvanizer::Event>& event) override;
 
 protected:
-    SimpleWindow(std::string_view name, Galvanizer::GObjHNDL parent, Galvanizer::Factory* originFac);
-
-private:
-    std::string m_WhoAmI = "Sussy Chungus";
+    SimpleWindow(std::string_view name, const Galvanizer::WeakRef& parent, Galvanizer::Factory* originFac);
 };

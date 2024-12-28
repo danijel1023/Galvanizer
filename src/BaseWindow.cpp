@@ -10,53 +10,31 @@ using namespace Galvanizer;
 using namespace EventConfiguration;
 
 
-GObjHNDL BaseWindow::factory(std::string_view name, GObjHNDL parent, Factory* originFac)
+GObjHNDL BaseWindow::factory(std::string_view name, const WeakRef& parent, Factory* originFac)
 {
     return new BaseWindow(name, parent, originFac);
 }
 
 
-BaseWindow::BaseWindow(std::string_view name, GObjHNDL parentObj, Factory* originFac)
-    : GalvanizerObject(name, parentObj, originFac)
+BaseWindow::BaseWindow(const std::string_view name, const WeakRef& parent, Factory* originFac)
+    : GalvanizerObject(name, parent, originFac)
 {
-    auto parent = dynamic_cast<BWinHNDL>(parentObj);
+    const auto lockedParent = parent.lock();
 
-    if (parent)
-        p_mainWindow = parent->p_mainWindow;
+    if (const auto winParent = dynamic_cast<BWinHNDL>(lockedParent.get()))
+        p_mainWindow = winParent->p_mainWindow;
 }
 
-BaseWindow::~BaseWindow()
-{}
+BaseWindow::~BaseWindow() = default;
 
 
-uintptr_t BaseWindow::Dispatcher(std::shared_ptr<Event> event)
+uintptr_t BaseWindow::Dispatcher(const std::shared_ptr<Event>& event)
 {
     return GalvanizerObject::Dispatcher(event);
 }
 
 
-uintptr_t BaseWindow::Callback(std::shared_ptr<Event> event)
+uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
 {
-    if (event->IsType<WindowEvent>())
-    {
-        auto windowEvent = static_cast<WindowEvent&>(*event);
-        switch (windowEvent.message)
-        {
-        case WindowMessage::Render:
-        case WindowMessage::Resize:
-        case WindowMessage::Iconify:
-        case WindowMessage::Maximise:
-        case WindowMessage::Restore:
-        {
-            break;
-        }
-
-        default:
-        {
-            return -2;
-        }
-        }
-    }
-
     return GalvanizerObject::Callback(event);
 }

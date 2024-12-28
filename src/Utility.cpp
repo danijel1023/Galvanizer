@@ -1,11 +1,7 @@
 #include "Utility.h"
 
-namespace Galvanizer
+namespace Galvanizer::Utility
 {
-
-namespace Utility
-{
-
 bool ValidateKeys(std::string_view str)
 {
     for (size_t i = 0, last_i = 0; i < str.size(); i++)
@@ -55,6 +51,5 @@ const char* strBool(bool x)
     else
         return "false";
 }
+}
 
-}
-}

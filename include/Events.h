@@ -37,11 +37,8 @@ EventType() { m_type = _EventID; }
 
 namespace Galvanizer
 {
-
 class GalvanizerObject;
-
 class MainWindow;
-
 using GObjHNDL = GalvanizerObject*;
 using WinHNDL = MainWindow*;
 
@@ -78,7 +75,7 @@ private:
     template<class s>
     bool GenerateID(std::string_view name)
     {
-        std::lock_guard<std::mutex> lk(m_EIDMutex);
+        std::lock_guard lk(m_EIDMutex);
 
         s::_EventID = m_EIDCounter++;
         m_EIDNames.emplace_back(name);
@@ -108,10 +105,14 @@ public:
 
     template<class s>
     [[nodiscard]] bool IsType() const
-    { return m_type == s::_EventID; }
+    {
+        return m_type == s::_EventID;
+    }
 
     [[nodiscard]] int GetType() const
-    { return m_type; }
+    {
+        return m_type;
+    }
 
     virtual std::string strMessage() = 0;
 
@@ -130,16 +131,14 @@ protected:
 
 enum class ObjectMessage
 {
-    Init, Run,
-    // Do not rely on Close event being sent always. Use Terminate instead!
-    Close,
+    Init,
+    Close,  // Post it to the child's parent and with child as the argument. If there is no parent, post it to the child
     Terminate, Empty
 };
 
-struct ObjectEvent
-    : public Event
+struct ObjectEvent : public Event
 {
-EVENT_REGISTRATION_INTERFACE(ObjectEvent);
+    EVENT_REGISTRATION_INTERFACE(ObjectEvent);
 
     std::string strMessage() override;
 
@@ -153,10 +152,9 @@ enum class ELMessage
     Run, Stop
 };
 
-struct ELEvent
-    : public Event
+struct ELEvent : public Event
 {
-EVENT_REGISTRATION_INTERFACE(ELEvent);
+    EVENT_REGISTRATION_INTERFACE(ELEvent);
 
     std::string strMessage() override;
 
@@ -174,10 +172,9 @@ enum class KeyMessage
     Key, Text
 };
 
-struct KeyEvent
-    : public Event
+struct KeyEvent : public Event
 {
-EVENT_REGISTRATION_INTERFACE(KeyEvent);
+    EVENT_REGISTRATION_INTERFACE(KeyEvent);
 
     std::string strMessage() override;
 
@@ -203,10 +200,9 @@ enum class MouseMessage
     Move, Enter, Leave
 };
 
-struct MouseEvent
-    : public Event
+struct MouseEvent : public Event
 {
-EVENT_REGISTRATION_INTERFACE(MouseEvent)
+    EVENT_REGISTRATION_INTERFACE(MouseEvent)
 
     std::string strMessage() override;
 
@@ -224,10 +220,9 @@ enum class WindowMessage
     Resize, Render
 };
 
-struct WindowEvent
-    : public Event
+struct WindowEvent : public Event
 {
-EVENT_REGISTRATION_INTERFACE(WindowEvent)
+    EVENT_REGISTRATION_INTERFACE(WindowEvent)
 
     std::string strMessage() override;
 
@@ -244,10 +239,9 @@ enum class GPUMessage
     Render, LoadTexture
 };
 
-struct GPUEvent
-    : public Event
+struct GPUEvent : public Event
 {
-EVENT_REGISTRATION_INTERFACE(GPUEvent)
+    EVENT_REGISTRATION_INTERFACE(GPUEvent)
 
     std::string strMessage() override;
 
@@ -260,19 +254,16 @@ enum class AppMessage
     Nothing
 };
 
-struct AppEvent
-    : public Event
+struct AppEvent : public Event
 {
-EVENT_REGISTRATION_INTERFACE(AppEvent)
+    EVENT_REGISTRATION_INTERFACE(AppEvent)
 
     std::string strMessage() override;
 
     AppMessage message = {};
 
-    void (* funcPtr)() = nullptr;
+    void (*funcPtr)() = nullptr;
 
     WinHNDL winHndl = nullptr;
 };
-
-
 }

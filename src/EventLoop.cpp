@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_map>
 
 #include "EventLoop.h"
 #include "EventConfigurations.h"
@@ -6,10 +7,8 @@
 using namespace Galvanizer;
 using namespace EventConfiguration;
 
-
 EventLoop::EventLoop(IBlockingObject* BO, GObjHNDL dispatchRef, bool async)
-    : m_queue(BO), m_async(async), m_dispatchRef(dispatchRef)
-{}
+    : m_queue(BO), m_async(async), m_dispatchRef(dispatchRef) {}
 
 EventLoop::~EventLoop()
 {
@@ -23,13 +22,15 @@ void EventLoop::Start()
 
     if (!m_async)
     {
-        std::cout << "[INFO] Running loop in sync-mode: " << std::this_thread::get_id() << std::endl;
+        std::cout << "[INFO] Running loop for \"" << m_dispatchRef->GetTarget() << "\" in sync-mode: " <<
+                std::this_thread::get_id() << std::endl;
         Loop();
     }
     else
     {
         m_workerThread = std::thread(&EventLoop::Loop, this);
-        std::cout << "[INFO] Started thread: " << m_workerThread.get_id() << std::endl;
+        std::cout << "[INFO] Running loop for \"" << m_dispatchRef->GetTarget() << "\" in async-mode: " <<
+                m_workerThread.get_id() << std::endl;
     }
 }
 
@@ -37,15 +38,27 @@ void EventLoop::Stop()
 {
     std::lock_guard lck(m_stopMutex);
 
+    // This comments needs to be here bc CLion problems...
+    {
+        std::unique_lock lock(m_mtx);
+        m_cv.wait(lock, [&] { return m_started; });
+    }
+
+
     if (m_running)
     {
         m_running = false;
-        auto empty = CreateELEvent<ELMessage::Stop>();
-        PostEvent(empty, nullptr);
+        PostEvent(CreateELEvent<ELMessage::Stop>(), nullptr);
 
         if (m_async)
+        {
+            std::cout << "-----[DEBUG] About to join thread-id: " << m_workerThread.get_id() << std::endl;
             m_workerThread.join();
+        }
     }
+    else
+        std::cout << "[WARN] Calling EventLoop::Stop() on stopped thread! thread-id: " << std::this_thread::get_id() <<
+                std::endl;
 }
 
 
@@ -58,6 +71,13 @@ void EventLoop::PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver
 void EventLoop::Loop()
 {
     m_running = true;
+
+    // This comments needs to be here bc CLion problems...
+    {
+        std::lock_guard lock(m_mtx);
+        m_started = true;
+        m_cv.notify_all();
+    }
 
     while (m_running)
     {
@@ -83,7 +103,7 @@ void EventLoop::Loop()
             case EventVisibility::Global:
             {
                 std::cout << "[WARNING] This is not a true global event - missing definition for what \"Global\" means."
-                          << std::endl;
+                        << std::endl;
                 // [TODO - IMPORTANT] This will not send the event to the actual "Global" root! Make mechanism for
                 // signaling the global root hndl
 
@@ -117,13 +137,15 @@ void EventLoop::Loop()
 
 
 EventLoopRef::EventLoopRef(EventLoop* eventLoop)
-    : m_ELRef(eventLoop)
-{}
+    : m_ELRef(eventLoop) {}
 
 
-void EventLoopRef::swap(EventLoopRef* eventLoop)
+void EventLoopRef::set(EventLoopRef* eventLoop)
 {
-    std::lock_guard lck(m_refMutex);
+    m_stopMutex.lock();
+    m_stopping = true;
+    m_stopMutex.unlock();
+
     if (m_ELRef)
         m_ELRef->Stop();
 
@@ -131,17 +153,23 @@ void EventLoopRef::swap(EventLoopRef* eventLoop)
         m_ELRef = eventLoop->m_ELRef;
     else
         m_ELRef = nullptr;
+
+    m_stopMutex.lock();
+    m_stopping = false;
+    m_stopMutex.unlock();
 }
 
 void EventLoopRef::Stop()
 {
-    swap(nullptr);
+    set(nullptr);
 }
 
 void EventLoopRef::PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver)
 {
-    std::lock_guard lck(m_refMutex);
-
-    if (m_ELRef)
-        m_ELRef->PostEvent(event, receiver);
+    std::lock_guard stop_lck(m_stopMutex);
+    if (!m_stopping)
+    {
+        if (m_ELRef)
+            m_ELRef->PostEvent(event, receiver);
+    }
 }

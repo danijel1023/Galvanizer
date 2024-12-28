@@ -2,25 +2,16 @@
 
 namespace Galvanizer
 {
-
-static std::mutex mutex;
-static std::condition_variable CV;
-static bool ready = false;
+static std::binary_semaphore g_semaphore = std::binary_semaphore(0);
 
 
 void GLFW_BlockingObject::WaitForEvent()
 {
-    std::unique_lock<std::mutex> Lck(mutex);
-    CV.wait(Lck, [] { return ready; });
-
-    ready = false;
+    g_semaphore.acquire();
 }
 
 void GLFW_BlockingObject::Notify()
 {
-    std::lock_guard<std::mutex> lg(mutex);
-    ready = true;
-    CV.notify_all();
+    g_semaphore.release();
 }
-
 }

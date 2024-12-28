@@ -8,28 +8,24 @@
 
 namespace Galvanizer
 {
-
-class MainWindow
-    : public BaseWindow
+class MainWindow : public BaseWindow
 {
 public:
-    static GObjHNDL factory(std::string_view name, GObjHNDL parent, Factory* originFac);
+    static GObjHNDL factory(std::string_view name, const WeakRef &parent, Factory *originFac);
     ~MainWindow() override;
 
-    uintptr_t Dispatcher(std::shared_ptr<Event> event) override;
-    uintptr_t Callback(std::shared_ptr<Event> event) override;
+    uintptr_t Dispatcher(const std::shared_ptr<Event> &event) override;
+    uintptr_t Callback(const std::shared_ptr<Event> &event) override;
 
 protected:
-    MainWindow(std::string_view name, GObjHNDL parent, Factory* originFac);
-
+    MainWindow(std::string_view name, const WeakRef &parent, Factory *originFac);
 
 private:
-    BlockingObject m_BO;    // I have to order them like this because of initialization order
+    BlockingObject m_BO; // I have to order them like this because of initialization order
 
 protected:
     EventLoop p_eventLoop;
     EventLoopRef p_mainELRef;
-    EventLoopRef* p_parentELRef = nullptr;
+    EventLoopRef *p_parentELRef = nullptr;
 };
-
 }

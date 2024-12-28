@@ -50,14 +50,14 @@ Factory* Application::FindTarget(Factory* elm, std::string_view target) const
     return elm;
 }
 
-
 Application::Application()
-    : GalvanizerObject("app", nullptr, nullptr),
-      m_eventLoop(&m_BO, this, false), m_ELRef(&m_eventLoop)
+    : GalvanizerObject("app", WeakRef(), nullptr), m_eventLoop(&m_BO, this, false),
+      m_ELRef(&m_eventLoop)
 {
+    m_ApplicationThis = this;
+
     p_displayName = "Application";
     p_eventLoopRef = &m_ELRef;
-    m_This = this;
 
     EventManager& em = EventManager::get();
     em.RegisterEvent<KeyEvent>("KeyEvent");
@@ -72,67 +72,79 @@ Application::Application()
     of.Get(pc_internalName);
 }
 
-Application::~Application()
-{}
+Application::~Application() = default;
 
 
 Application& Application::get()
 {
-    return *m_This;
+    return static_cast<Application&>(*m_ApplicationThis);
 }
 
 
-GObjHNDL Application::FindGObj(std::string_view target)
+OwningRef Application::FindGObj(const std::string_view target)
 {
     if (!Utility::ValidateKeys(target))
     {
         std::cout << "[ERROR] ValidateKeys failed for: \"" << target << "\"" << std::endl;
-        return nullptr;
+        return {};
     }
 
-    std::vector<std::string> keys = Utility::ExtractKeys(target);
+    const std::vector<std::string> keys = Utility::ExtractKeys(target);
 
-    GObjHNDL obj = this;
-    for (std::string_view key: keys)
+    std::vector<OwningRef> obj;
+    obj.reserve(keys.size());
+
+    obj.emplace_back(p_weakSelf.lock());
+    for (const std::string_view key: keys)
     {
-        obj = obj->FindChild(key);
+        obj.emplace_back(obj.back()->FindChild(key).lock());
 
-        if (!obj)
+        if (!obj.back())
         {
             std::cout << "[INFO] No window object found at \"" << key << "\" in \"" << target << "\"" << std::endl;
-            return nullptr;
+            return {};
         }
     }
 
-    return obj;
+    return obj.back();
 }
 
 
 int Application::Run()
 {
-    auto init = CreateObjectEvent<ObjectMessage::Init>();
+    // Will crash on exit if the application was made on stack
+    m_strongAppRef = CreateOwningRef(this);
+    p_weakSelf = m_strongAppRef;
+
+    const auto init = CreateObjectEvent<ObjectMessage::Init>();
     PostEvent(init);
 
-    auto run = CreateObjectEvent<ObjectMessage::Run>();
-    PostEvent(run);
-
+    // Blocking call
     m_eventLoop.Start();
+
+    // Applications event loop stopped
+    std::cout << "[INFO] Exited application event loop." << std::endl;
     return 0;
 }
 
 
-uintptr_t Application::Dispatcher(std::shared_ptr<Event> event)
+uintptr_t Application::Dispatcher(const std::shared_ptr<Event>& event)
 {
     return GalvanizerObject::Dispatcher(event);
 }
 
-uintptr_t Application::Callback(std::shared_ptr<Event> event)
+uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
 {
     if (event->IsType<ObjectEvent>())
     {
         auto& objectEvent = static_cast<ObjectEvent&>(*event);
         switch (objectEvent.message)
         {
+        case ObjectMessage::Init:
+        {
+            break;
+        }
+
         case ObjectMessage::Close:
         {
             std::cout << "[INFO] Application got Close signal!" << std::endl;
@@ -141,19 +153,13 @@ uintptr_t Application::Callback(std::shared_ptr<Event> event)
 
         case ObjectMessage::Terminate:
         {
-            if (objectEvent.objHndl != this)
-                return GalvanizerObject::Callback(event);
-
             std::cout << "[INFO] Application got Terminate signal." << std::endl;
 
-            auto terminate = EventConfiguration::CreateObjectEvent<ObjectMessage::Terminate>(nullptr);
-            for (auto& ch: p_children)
-            {
-                terminate->objHndl = ch;
-                PostEvent(terminate);
-            }
+            GalvanizerObject::Callback(event);
 
-            m_eventLoop.Stop();
+            p_eventLoopRef->Stop();
+            m_strongAppRef.DropOwnership(false);
+
             return 0;
         }
 
