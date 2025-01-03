@@ -114,7 +114,7 @@ public:
         return m_type;
     }
 
-    virtual std::string strMessage() = 0;
+    virtual std::string strMessage() const = 0;
 
     EventVisibility visibility = {};
     ChildPriority priority = {};
@@ -140,7 +140,7 @@ struct ObjectEvent : public Event
 {
     EVENT_REGISTRATION_INTERFACE(ObjectEvent);
 
-    std::string strMessage() override;
+    [[nodiscard]] std::string strMessage() const override;
 
     ObjectMessage message = {};
     GObjHNDL objHndl = nullptr;
@@ -156,7 +156,7 @@ struct ELEvent : public Event
 {
     EVENT_REGISTRATION_INTERFACE(ELEvent);
 
-    std::string strMessage() override;
+    [[nodiscard]] std::string strMessage() const override;
 
     ELMessage message = {};
 };
@@ -176,7 +176,7 @@ struct KeyEvent : public Event
 {
     EVENT_REGISTRATION_INTERFACE(KeyEvent);
 
-    std::string strMessage() override;
+    [[nodiscard]] std::string strMessage() const override;
 
     KeyAction action = {};
     KeyMessage message = {};
@@ -204,7 +204,7 @@ struct MouseEvent : public Event
 {
     EVENT_REGISTRATION_INTERFACE(MouseEvent)
 
-    std::string strMessage() override;
+    [[nodiscard]] std::string strMessage() const override;
 
     MouseMessage message = {};
     MouseButton button = {};
@@ -224,7 +224,7 @@ struct WindowEvent : public Event
 {
     EVENT_REGISTRATION_INTERFACE(WindowEvent)
 
-    std::string strMessage() override;
+    [[nodiscard]] std::string strMessage() const override;
 
     WindowMessage message = {};
 
@@ -243,7 +243,7 @@ struct GPUEvent : public Event
 {
     EVENT_REGISTRATION_INTERFACE(GPUEvent)
 
-    std::string strMessage() override;
+    [[nodiscard]] std::string strMessage() const override;
 
     GPUMessage message = {};
 };
@@ -258,7 +258,7 @@ struct AppEvent : public Event
 {
     EVENT_REGISTRATION_INTERFACE(AppEvent)
 
-    std::string strMessage() override;
+    [[nodiscard]] std::string strMessage() const override;
 
     AppMessage message = {};
 

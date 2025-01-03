@@ -74,6 +74,11 @@ uintptr_t GalvanizerObject::Callback(const std::shared_ptr<Event>& event)
             << " in GalvanizerObject::Callback] Event: " << event->strMessage() << " thread-id: " <<
             std::this_thread::get_id() << std::endl;
 
+
+    eventM.lock();
+    events.emplace_back(GetTarget(), std::make_pair(event, std::this_thread::get_id()));
+    eventM.unlock();
+
     if (event->IsType<ObjectEvent>())
     {
         auto& objectEvent = static_cast<ObjectEvent&>(*event);

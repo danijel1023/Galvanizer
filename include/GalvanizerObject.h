@@ -2,6 +2,7 @@
 
 #include <string_view>
 #include <memory>
+#include <unordered_map>
 
 #include "Events.h"
 #include "EventLoop.h"
@@ -35,7 +36,11 @@ public:
 
     void PostEvent(const std::shared_ptr<Event>& event);
 
-    bool Closing() const { return m_closing; }
+    [[nodiscard]] bool Closing() const { return m_closing; }
+
+    static inline std::vector<std::pair<std::string, std::pair<std::shared_ptr<Event>, std::thread::id>>>
+    events;
+    static inline std::mutex eventM;
 
 protected:
     GalvanizerObject(std::string_view name, const WeakRef& parent, Factory* originFac);

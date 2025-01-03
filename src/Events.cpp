@@ -3,7 +3,7 @@
 using namespace Galvanizer;
 
 
-std::string KeyEvent::strMessage()
+std::string KeyEvent::strMessage() const
 {
     switch (message)
     {
@@ -17,7 +17,7 @@ std::string KeyEvent::strMessage()
     }
 }
 
-std::string MouseEvent::strMessage()
+std::string MouseEvent::strMessage() const
 {
     switch (message)
     {
@@ -46,7 +46,7 @@ std::string MouseEvent::strMessage()
 }
 
 
-std::string ObjectEvent::strMessage()
+std::string ObjectEvent::strMessage() const
 {
     switch (message)
     {
@@ -63,7 +63,7 @@ std::string ObjectEvent::strMessage()
 }
 
 
-std::string WindowEvent::strMessage()
+std::string WindowEvent::strMessage() const
 {
     switch (message)
     {
@@ -83,7 +83,7 @@ std::string WindowEvent::strMessage()
     }
 }
 
-std::string GPUEvent::strMessage()
+std::string GPUEvent::strMessage() const
 {
     switch (message)
     {
@@ -103,7 +103,7 @@ std::string GPUEvent::strMessage()
     }
 }
 
-std::string AppEvent::strMessage()
+std::string AppEvent::strMessage() const
 {
     switch (message)
     {
@@ -115,7 +115,7 @@ std::string AppEvent::strMessage()
     }
 }
 
-std::string ELEvent::strMessage()
+std::string ELEvent::strMessage() const
 {
     switch (message)
     {

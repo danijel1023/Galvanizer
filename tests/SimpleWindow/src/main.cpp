@@ -7,13 +7,13 @@
 
 
 using namespace Galvanizer;
-namespace ch = std::chrono;
+using namespace std::chrono;
 
 int main()
 {
-    ch::steady_clock::time_point start = ch::steady_clock::now();
+    steady_clock::time_point start = steady_clock::now();
 
-    for (int i = 0; i < 500; i++)
+    for (int i = 0; i < 1; i++)
     {
         ObjectFactories::Init();
 
@@ -45,10 +45,27 @@ int main()
 
         std::cout << std::endl << "*=* *=* *=* *=* *=* *=* *=* *=* Shutting down iteration: " << i <<
                 " *=* *=* *=* *=* *=* *=* *=* *=*" << std::endl << std::endl;
+
+        std::cout << "Events: " << std::endl;
+        GalvanizerObject::eventM.lock();
+
+        for (const auto& ev: GalvanizerObject::events)
+        {
+            const auto& target = ev.first;
+            const auto& thread = ev.second.second;
+            const auto& event = *ev.second.first;
+
+            std::cout << "On thread " << thread << " event " << event.strMessage() << " received by [" << target << "]"
+                    << std::endl;
+        }
+
+        GalvanizerObject::events.clear();
+
+        GalvanizerObject::eventM.unlock();
     }
 
-    ch::steady_clock::time_point end = ch::steady_clock::now();
+    steady_clock::time_point end = steady_clock::now();
 
-    std::cerr << "Finished execution in " << ch::duration_cast<ch::milliseconds>(end - start).count() << "ms" <<
+    std::cerr << "Finished execution in " << duration_cast<milliseconds>(end - start).count() << "ms" <<
             std::endl;
 }
