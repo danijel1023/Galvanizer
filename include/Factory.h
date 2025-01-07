@@ -11,19 +11,20 @@ namespace Galvanizer
 {
 class GalvanizerObject;
 struct Factory;
-using GObjHNDL = GalvanizerObject *;
-using GObjFactoryPtr = GObjHNDL(*)(std::string_view name, const WeakRef &parent, Factory *originFac);
+using GObjHNDL = GalvanizerObject*;
+using GObjFactoryPtr = GObjHNDL(*)(std::string_view name, const WeakRef& parent, Factory* originFac,
+                                   bool createdOnHeap);
 
 
 struct Factory
 {
-    Factory(std::string_view name, std::string *rootOwner);
-    Factory(std::string_view name, Factory *parent);
+    Factory(std::string_view name, std::string* rootOwner);
+    Factory(std::string_view name, Factory* parent);
     Factory() = default;
     ~Factory();
 
 
-    Factory *FindChild(std::string_view facName);
+    Factory* FindChild(std::string_view facName);
 
     void Reset();
 
@@ -49,14 +50,14 @@ struct Factory
     std::string overridesOwner;
 
     std::string name;
-    Factory *parent = nullptr;
-    std::string *rootOwner = nullptr;
+    Factory* parent = nullptr;
+    std::string* rootOwner = nullptr;
 
     // We don't clean any factory nodes. In most cases, it's way easier to just
     // "disable" a factory and reuse it later, than deleting the object and later
     // allocating a new one. When application terminates, the underlying OS will
     // automatically reclaim the allocated memory anyway.
-    std::vector<Factory *> children;
+    std::vector<Factory*> children;
 };
 
 
@@ -74,29 +75,29 @@ struct FactoryRoot
 class ObjectFactories
 {
 public:
-    ObjectFactories(const ObjectFactories &) = delete;
-    ObjectFactories operator=(const ObjectFactories &) = delete;
-    static ObjectFactories &GetInstance();
+    ObjectFactories(const ObjectFactories&) = delete;
+    ObjectFactories operator=(const ObjectFactories&) = delete;
+    static ObjectFactories& GetInstance();
 
     static void Init();
     static void Shutdown();
 
     // target -> path + name
 
-    Factory *Find(std::string_view target, std::string_view owner);
-    Factory *Get(std::string_view target);
-    Factory *Get(std::string_view target, std::string_view owner);
+    Factory* Find(std::string_view target, std::string_view owner);
+    Factory* Get(std::string_view target);
+    Factory* Get(std::string_view target, std::string_view owner);
     std::vector<std::string_view> GetFacNames(std::string_view path);
 
     bool CreateOwner(std::string_view owner);
 
-    std::vector<OwningRef> Build(const OwningRef &pathObj);
+    std::vector<OwningRef> Build(const OwningRef& pathObj);
 
 private:
     ObjectFactories();
 
     std::recursive_mutex m_accessMutex;
-    std::vector<FactoryRoot *> m_facRoots;
+    std::vector<FactoryRoot*> m_facRoots;
 
     std::string m_defaultOwnerName;
 };

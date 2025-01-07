@@ -20,7 +20,7 @@ using GObjHNDL = GalvanizerObject*;
 class GalvanizerObject
 {
 public:
-    static GObjHNDL factory(std::string_view name, const WeakRef& parent, Factory* originFac);
+    static GObjHNDL factory(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap);
     virtual ~GalvanizerObject();
 
     virtual uintptr_t Dispatcher(const std::shared_ptr<Event>& event);
@@ -38,12 +38,14 @@ public:
 
     [[nodiscard]] bool Closing() const { return m_closing; }
 
+    const bool c_createdOnHeap;
+
     static inline std::vector<std::pair<std::string, std::pair<std::shared_ptr<Event>, std::thread::id>>>
     events;
     static inline std::mutex eventM;
 
 protected:
-    GalvanizerObject(std::string_view name, const WeakRef& parent, Factory* originFac);
+    GalvanizerObject(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap);
 
     // p_weakSelf gets set after constructor and before receiving init event
     WeakRef p_parent, p_weakSelf;

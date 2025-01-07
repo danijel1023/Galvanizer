@@ -1,9 +1,11 @@
 #include <iostream>
+#include <oneapi/tbb/detail/_template_helpers.h>
 
 #include "Application.h"
 
 #include "../include/SimpleWindow.h"
 #include "../include/SimpleChild.h"
+#include "../vendor/glfw/include/GLFW/glfw3.h"
 
 
 using namespace Galvanizer;
@@ -16,7 +18,6 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         ObjectFactories::Init();
-
         Application app;
         //app.EnablePlugins(Application::DefaultPluginLocation);
 
@@ -43,10 +44,8 @@ int main()
 
         ObjectFactories::Shutdown();
 
-        std::cout << std::endl << "*=* *=* *=* *=* *=* *=* *=* *=* Shutting down iteration: " << i <<
-                " *=* *=* *=* *=* *=* *=* *=* *=*" << std::endl << std::endl;
 
-        std::cout << "Events: " << std::endl;
+        std::cout << "Events:" << std::endl;
         GalvanizerObject::eventM.lock();
 
         for (const auto& ev: GalvanizerObject::events)
@@ -60,8 +59,10 @@ int main()
         }
 
         GalvanizerObject::events.clear();
-
         GalvanizerObject::eventM.unlock();
+
+        std::cout << std::endl << "*=* *=* *=* *=* *=* *=* *=* *=* Shutting down iteration: " << i <<
+                " *=* *=* *=* *=* *=* *=* *=* *=*" << std::endl << std::endl;
     }
 
     steady_clock::time_point end = steady_clock::now();

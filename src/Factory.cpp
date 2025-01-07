@@ -117,8 +117,8 @@ Factory* ObjectFactories::Find(const std::string_view target, const std::string_
 
         if (!currentFactory)
         {
-            std::cout << "[INFO] No factory object found at \"" << key << "\" in \"" << target << "\" with owner " <<
-                    owner << std::endl;
+            //std::cout << "[INFO] No factory object found at \"" << key << "\" in \"" << target << "\" with owner " <<
+            //        owner << std::endl;
             return nullptr;
         }
     }
@@ -160,7 +160,7 @@ Factory* ObjectFactories::Get(const std::string_view target, const std::string_v
 
 
     Factory* currentFactory = &m_facRoots[ownerIndex]->factory;
-    std::cout << "[INFO] For target \"" << *(currentFactory->rootOwner) << ":" << target << "\" -----" << std::endl;
+    //std::cout << "[INFO] For target \"" << *(currentFactory->rootOwner) << ":" << target << "\" -----" << std::endl;
 
     for (const auto& key: keys)
     {
@@ -168,8 +168,8 @@ Factory* ObjectFactories::Get(const std::string_view target, const std::string_v
 
         if (!chFactory)
         {
-            std::cout << "Creating factory \"" << key << "\" at namespace \"" << currentFactory->name << "\"" <<
-                    std::endl;
+            //std::cout << "Creating factory \"" << key << "\" at namespace \"" << currentFactory->name << "\"" <<
+            //        std::endl;
 
             chFactory = new Factory(key, currentFactory);
         }
@@ -177,7 +177,7 @@ Factory* ObjectFactories::Get(const std::string_view target, const std::string_v
         currentFactory = chFactory;
     }
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
 
     return currentFactory;
 }
@@ -196,7 +196,7 @@ std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj)
     std::lock_guard lck(m_accessMutex);
 
     const std::string path = pathObj->GetTarget();
-    std::cout << "[INFO] Build namespace \"" << path << "\"" << std::endl;
+    //std::cout << "[INFO] Build namespace \"" << path << "\"" << std::endl;
 
     struct FacListNode
     {
@@ -255,8 +255,8 @@ std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj)
             // Check if multiple overrides are present for same owner and name
             if (factories[current].index != static_cast<size_t>(-1))
             {
-                std::cout << "[ERROR] Two or more factories are trying to override same factory: "
-                        << factories[current].fac->name << " on path: " << path << std::endl;
+                //std::cout << "[ERROR] Two or more factories are trying to override same factory: "
+                //        << factories[current].fac->name << " on path: " << path << std::endl;
 
                 return {};
             }
@@ -303,7 +303,7 @@ std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj)
 
 
     // Print some nice information
-    std::cout << "[INFO] Survived factories: ";
+    /*std::cout << "[INFO] Survived factories: ";
     bool firstPrint = true;
     for (auto WF: factories)
     {
@@ -316,7 +316,7 @@ std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj)
         std::cout << WF.fac->name << " (" << *(WF.fac->rootOwner) << ")";
         firstPrint = false;
     }
-    std::cout << std::endl;
+    std::cout << std::endl;*/
 
 
     // Build the actual objects
@@ -326,7 +326,7 @@ std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj)
         if (facElm.fac && facElm.fac->ptr)
         {
             // Call facElm (pointer) aka. builder factory
-            OwningRef hndl = CreateOwningRef(facElm.fac->ptr(facElm.fac->name, pathObj, facElm.fac));
+            OwningRef hndl = CreateOwningRef(facElm.fac->ptr(facElm.fac->name, pathObj, facElm.fac, true));
 
             // Give the new obj a weak hndl to itself
             hndl->p_weakSelf = hndl;
@@ -365,7 +365,7 @@ bool ObjectFactories::CreateOwner(std::string_view owner)
     if (m_defaultOwnerName.empty())
         m_defaultOwnerName = owner;
 
-    std::cout << "[DEBUG] Creating owner: " << owner << std::endl;
+    //std::cout << "[DEBUG] Creating owner: " << owner << std::endl;
 
     m_facRoots.push_back(new FactoryRoot(owner));
     return true;

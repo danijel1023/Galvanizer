@@ -22,15 +22,15 @@ void EventLoop::Start()
 
     if (!m_async)
     {
-        std::cout << "[INFO] Running loop for \"" << m_dispatchRef->GetTarget() << "\" in sync-mode: " <<
-                std::this_thread::get_id() << std::endl;
+        //std::cout << "[INFO] Running loop for \"" << m_dispatchRef->GetTarget() << "\" in sync-mode: " <<
+        //        std::this_thread::get_id() << std::endl;
         Loop();
     }
     else
     {
         m_workerThread = std::thread(&EventLoop::Loop, this);
-        std::cout << "[INFO] Running loop for \"" << m_dispatchRef->GetTarget() << "\" in async-mode: " <<
-                m_workerThread.get_id() << std::endl;
+        //std::cout << "[INFO] Running loop for \"" << m_dispatchRef->GetTarget() << "\" in async-mode: " <<
+        //        m_workerThread.get_id() << std::endl;
     }
 }
 
@@ -52,7 +52,7 @@ void EventLoop::Stop()
 
         if (m_async)
         {
-            std::cout << "-----[DEBUG] About to join thread-id: " << m_workerThread.get_id() << std::endl;
+            //std::cout << "-----[DEBUG] About to join thread-id: " << m_workerThread.get_id() << std::endl;
             m_workerThread.join();
         }
     }
@@ -97,17 +97,6 @@ void EventLoop::Loop()
             {
                 if (event->receiver)
                     dispResult = event->receiver->Dispatcher(event);
-                break;
-            }
-
-            case EventVisibility::Global:
-            {
-                std::cout << "[WARNING] This is not a true global event - missing definition for what \"Global\" means."
-                        << std::endl;
-                // [TODO - IMPORTANT] This will not send the event to the actual "Global" root! Make mechanism for
-                // signaling the global root hndl
-
-                dispResult = m_dispatchRef->Dispatcher(event);
                 break;
             }
 

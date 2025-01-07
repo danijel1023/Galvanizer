@@ -11,17 +11,18 @@
 using namespace Galvanizer;
 using namespace EventConfiguration;
 
-GObjHNDL SimpleWindow::factory(const std::string_view name, const WeakRef& parent, Factory* originFac)
+GObjHNDL SimpleWindow::factory(const std::string_view name, const WeakRef& parent, Factory* originFac,
+                               bool createdOnHeap)
 {
-    return new SimpleWindow(name, parent, originFac);
+    return new SimpleWindow(name, parent, originFac, createdOnHeap);
 }
 
-SimpleWindow::SimpleWindow(const std::string_view name, const WeakRef& parent, Factory* originFac)
-    : MainWindow(name, parent, originFac) {}
+SimpleWindow::SimpleWindow(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
+    : MainWindow(name, parent, originFac, createdOnHeap) {}
 
 SimpleWindow::~SimpleWindow() = default;
 
-uintptr_t SimpleWindow::Dispatcher(const std::shared_ptr<Galvanizer::Event>& event)
+uintptr_t SimpleWindow::Dispatcher(const std::shared_ptr<Event>& event)
 {
     return MainWindow::Dispatcher(event);
 }
@@ -48,10 +49,10 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             std::cout << "====================================" << std::endl;
             std::cout << "Posting Close signal to application. thread-id: " << std::this_thread::get_id() << std::endl;
 
-            const auto close = CreateObjectEvent<ObjectMessage::Close>(&Application::get());
-            Application::get().PostEvent(close);
+            //auto target = this;
+            auto target = p_parent.lock();
 
-            //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            p_parent.lock()->PostEvent(CreateObjectEvent<ObjectMessage::Close>(target));
         }
     }
 

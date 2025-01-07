@@ -7,6 +7,8 @@
 #include "Utility.h"
 #include "EventConfigurations.h"
 
+#include "GLFW/glfw3.h"
+
 using namespace Galvanizer;
 using namespace EventConfiguration;
 
@@ -51,7 +53,7 @@ Factory* Application::FindTarget(Factory* elm, std::string_view target) const
 }
 
 Application::Application()
-    : GalvanizerObject("app", WeakRef(), nullptr), m_eventLoop(&m_BO, this, false),
+    : GalvanizerObject("app", WeakRef(), nullptr, false), m_eventLoop(&m_BO, this, false),
       m_ELRef(&m_eventLoop)
 {
     m_ApplicationThis = this;
@@ -70,9 +72,14 @@ Application::Application()
     ObjectFactories& of = ObjectFactories::GetInstance();
     of.CreateOwner("app");
     of.Get(pc_internalName);
+
+    glfwInit();
 }
 
-Application::~Application() = default;
+Application::~Application()
+{
+    glfwTerminate();
+}
 
 
 Application& Application::get()
@@ -112,7 +119,7 @@ OwningRef Application::FindGObj(const std::string_view target)
 
 int Application::Run()
 {
-    // Will crash on exit if the application was made on stack
+    // Will NOT crash on exit if the application was made on stack - hotfix on OwningRef
     m_strongAppRef = CreateOwningRef(this);
     p_weakSelf = m_strongAppRef;
 
@@ -133,6 +140,9 @@ uintptr_t Application::Dispatcher(const std::shared_ptr<Event>& event)
     return GalvanizerObject::Dispatcher(event);
 }
 
+
+static GLFWwindow* window;
+
 uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
 {
     if (event->IsType<ObjectEvent>())
@@ -142,6 +152,11 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
         {
         case ObjectMessage::Init:
         {
+            window = glfwCreateWindow(640, 480, "Application window2", nullptr, nullptr);
+            glfwMakeContextCurrent(window);
+
+            glfwSwapBuffers(window);
+            glfwPollEvents();
             break;
         }
 
@@ -153,18 +168,23 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
 
         case ObjectMessage::Terminate:
         {
+            if (objectEvent.objHndl != this)
+                break;
+
             std::cout << "[INFO] Application got Terminate signal." << std::endl;
 
             GalvanizerObject::Callback(event);
 
             p_eventLoopRef->Stop();
-            m_strongAppRef.DropOwnership(false);
+            m_strongAppRef.DropOwnership();
 
+            glfwDestroyWindow(window);
+            window = nullptr;
             return 0;
         }
 
         default:
-            //std::cout << "[ERROR] Application received unhandled event: " << event->strMessage() << std::endl;
+            std::cout << "[ERROR] Application received unhandled event: " << event->strMessage() << std::endl;
             break;
         }
     }

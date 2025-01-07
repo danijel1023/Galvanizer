@@ -9,6 +9,7 @@
 
 
 //[TODO] fix name
+//[TODO] IMPORTANT: var names cannot start with '_'
 #define EVENT_REGISTRATION_INTERFACE(EventType) \
 protected:\
 friend class EventManager;\
@@ -64,7 +65,7 @@ public:
     void RegisterEvent(std::string_view name)
     {
         // 'static' makes the 'GenerateID<s>(name)' run once per template type which makes
-        // sure that there is no duplicate names and IDs for that type. This way we dont
+        // sure that there are no duplicate names and IDs for that type. This way we dont
         // have to check if we stored the name already and dont have to deal with typeid
         [[maybe_unused]] static bool dummy = GenerateID<s>(name);
     }
@@ -90,7 +91,7 @@ private:
 
 enum class EventVisibility
 {
-    Unset, Global, Root, Single
+    Unset, Root, Single
 };
 
 enum class ChildPriority

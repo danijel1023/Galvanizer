@@ -21,7 +21,7 @@ public:
 
     ~OwningRef();
 
-    void DropOwnership(bool deleteObj = true);
+    void DropOwnership();
 
     [[nodiscard]] GObjHNDL get() const;
     [[nodiscard]] GObjHNDL operator->() const; // Same as get()
