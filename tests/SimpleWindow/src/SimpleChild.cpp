@@ -7,13 +7,13 @@
 using namespace Galvanizer;
 
 
-GObjHNDL SimpleChild::factory(std::string_view name, const WeakRef& parent, Factory* originFac)
+GObjHNDL SimpleChild::factory(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
 {
-    return new SimpleChild(name, parent, originFac);
+    return new SimpleChild(name, parent, originFac, createdOnHeap);
 }
 
-SimpleChild::SimpleChild(const std::string_view name, const WeakRef& parent, Factory* originFac)
-    : BaseWindow(name, parent, originFac) {}
+SimpleChild::SimpleChild(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
+    : BaseWindow(name, parent, originFac, createdOnHeap) {}
 
 
 SimpleChild::~SimpleChild() = default;

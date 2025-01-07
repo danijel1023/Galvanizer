@@ -59,7 +59,7 @@ public:
         m_DB.at(index).weakCount++;
     }
 
-    void removeStrongRef(size_t* index, bool deleteObj)
+    void removeStrongRef(size_t* index)
     {
         if (*index == static_cast<size_t>(-1))
             return;
@@ -69,7 +69,7 @@ public:
 
         if (elm.strongCount == 1)
         {
-            if (deleteObj)
+            if (elm.hndl->c_createdOnHeap)
                 delete elm.hndl;
 
             elm.hndl = nullptr;
@@ -127,7 +127,7 @@ OwningRef Galvanizer::CreateOwningRef(GObjHNDL hndl)
 {
     OwningRef obj;
     obj.m_DBIndex = g_RefDatabase.CreateStrongRef(hndl);
-    std::cout << "Created owningRef: " << obj.m_DBIndex << " for " << hndl << std::endl;
+    //std::cout << "Created owningRef: " << obj.m_DBIndex << " for " << hndl << std::endl;
 
     return obj;
 }
@@ -180,7 +180,7 @@ OwningRef& OwningRef::operator=(OwningRef&& right) noexcept
 
 OwningRef::~OwningRef()
 {
-    g_RefDatabase.removeStrongRef(&m_DBIndex, true);
+    g_RefDatabase.removeStrongRef(&m_DBIndex);
 }
 
 GObjHNDL OwningRef::get() const
@@ -189,9 +189,9 @@ GObjHNDL OwningRef::get() const
 }
 
 
-void OwningRef::DropOwnership(bool deleteObj)
+void OwningRef::DropOwnership()
 {
-    g_RefDatabase.removeStrongRef(&m_DBIndex, deleteObj);
+    g_RefDatabase.removeStrongRef(&m_DBIndex);
 
     m_DBIndex = static_cast<size_t>(-1);
     m_hndl = nullptr;

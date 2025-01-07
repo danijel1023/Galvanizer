@@ -10,14 +10,14 @@ using namespace Galvanizer;
 using namespace EventConfiguration;
 
 
-GObjHNDL BaseWindow::factory(std::string_view name, const WeakRef& parent, Factory* originFac)
+GObjHNDL BaseWindow::factory(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
 {
-    return new BaseWindow(name, parent, originFac);
+    return new BaseWindow(name, parent, originFac, createdOnHeap);
 }
 
 
-BaseWindow::BaseWindow(const std::string_view name, const WeakRef& parent, Factory* originFac)
-    : GalvanizerObject(name, parent, originFac)
+BaseWindow::BaseWindow(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
+    : GalvanizerObject(name, parent, originFac, createdOnHeap)
 {
     const auto lockedParent = parent.lock();
 
