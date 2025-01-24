@@ -7,8 +7,6 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
-#include "shaders/Default.inl"
-
 using namespace Galvanizer;
 using namespace EventConfiguration;
 using namespace std::chrono;
