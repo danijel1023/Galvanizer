@@ -18,7 +18,7 @@ EventLoop::~EventLoop()
 void EventLoop::Start()
 {
     auto empty = CreateELEvent<ELMessage::Run>();
-    PostEvent(empty, nullptr);
+    PostEvent(empty, WeakRef());
 
     if (!m_async)
     {
@@ -40,7 +40,7 @@ void EventLoop::Stop()
 
     // This comments needs to be here bc CLion problems...
     {
-        std::unique_lock lock(m_mtx);
+        std::unique_lock lock(m_startMutex);
         m_cv.wait(lock, [&] { return m_started; });
     }
 
@@ -48,7 +48,7 @@ void EventLoop::Stop()
     if (m_running)
     {
         m_running = false;
-        PostEvent(CreateELEvent<ELMessage::Stop>(), nullptr);
+        PostEvent(CreateELEvent<ELMessage::Stop>(), WeakRef());
 
         if (m_async)
         {
@@ -62,7 +62,7 @@ void EventLoop::Stop()
 }
 
 
-void EventLoop::PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver)
+void EventLoop::PostEvent(const std::shared_ptr<Event>& event, const WeakRef& receiver)
 {
     event->receiver = receiver;
     m_queue.PostEvent(event);
@@ -74,7 +74,7 @@ void EventLoop::Loop()
 
     // This comments needs to be here bc CLion problems...
     {
-        std::lock_guard lock(m_mtx);
+        std::lock_guard lock(m_startMutex);
         m_started = true;
         m_cv.notify_all();
     }
@@ -95,8 +95,9 @@ void EventLoop::Loop()
             case EventVisibility::Root:
             case EventVisibility::Single:
             {
-                if (event->receiver)
-                    dispResult = event->receiver->Dispatcher(event);
+                auto receiver = event->receiver.lock();
+                if (receiver)
+                    dispResult = receiver->Dispatcher(event);
                 break;
             }
 
@@ -117,6 +118,7 @@ void EventLoop::Loop()
             if (dispResult != 0)
             {
                 std::cout << "[WARN] dispResult returned non-null: " << dispResult << std::endl;
+                std::cout << "[WARN-DEBUG] event: " << event->strMessage() << std::endl;
             }
         }
     }
@@ -153,7 +155,7 @@ void EventLoopRef::Stop()
     set(nullptr);
 }
 
-void EventLoopRef::PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver)
+void EventLoopRef::PostEvent(const std::shared_ptr<Event>& event, WeakRef receiver)
 {
     std::lock_guard stop_lck(m_stopMutex);
     if (!m_stopping)

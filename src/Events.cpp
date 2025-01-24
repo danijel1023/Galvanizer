@@ -7,8 +7,8 @@ std::string KeyEvent::strMessage() const
 {
     switch (message)
     {
-    case KeyMessage::Text:
-        return "KeyEvent::Text";
+    case KeyMessage::Codepoint:
+        return "KeyEvent::Codepoint";
     case KeyMessage::Key:
         return "KeyEvent::Key";
 
@@ -21,18 +21,10 @@ std::string MouseEvent::strMessage() const
 {
     switch (message)
     {
-    case MouseMessage::Down:
-        return "MouseEvent::Down";
-    case MouseMessage::Up:
-        return "MouseEvent::Up";
-    case MouseMessage::ScrollUp:
-        return "MouseEvent::ScrollUp";
-    case MouseMessage::ScrollDown:
-        return "MouseEvent::ScrollDown";
-    case MouseMessage::ScrollLeft:
-        return "MouseEvent::ScrollLeft";
-    case MouseMessage::ScrollRight:
-        return "MouseEvent::ScrollRight";
+    case MouseMessage::Button:
+        return "MouseEvent::Button";
+    case MouseMessage::Scroll:
+        return "MouseEvent::Scroll";
     case MouseMessage::Move:
         return "MouseEvent::Move";
     case MouseMessage::Enter:
@@ -77,29 +69,28 @@ std::string WindowEvent::strMessage() const
         return "WindowEvent::Resize";
     case WindowMessage::Render:
         return "WindowEvent::Render";
+    case WindowMessage::Close:
+        return "WindowEvent::Close";
+    case WindowMessage::Position:
+        return "WindowEvent::Position";
+    case WindowMessage::Refresh:
+        return "WindowEvent::Refresh";
+    case WindowMessage::Undefined:
+        return "WindowEvent::Undefined";
+    case WindowMessage::GainFocus:
+        return "WindowEvent::GainFocus";
+    case WindowMessage::LoseFocus:
+        return "WindowEvent::LoseFocus";
+
+    case WindowMessage::CreateWindow:
+        return "WindowEvent::CreateWindow";
+    case WindowMessage::DestroyWindow:
+        return "WindowEvent::DestroyWindow";
+    case WindowMessage::RegisterHNDL:
+        return "WindowEvent::RegisterHNDL";
 
     default:
         return "WindowEvent::UnknownMessage";
-    }
-}
-
-std::string GPUEvent::strMessage() const
-{
-    switch (message)
-    {
-    case GPUMessage::Init:
-        return "GPUEvent::Init";
-    case GPUMessage::Run:
-        return "GPUEvent::Run";
-    case GPUMessage::TerminateThread:
-        return "GPUEvent::TerminateThread";
-    case GPUMessage::Render:
-        return "GPUEvent::Render";
-    case GPUMessage::LoadTexture:
-        return "GPUEvent::LoadTexture";
-
-    default:
-        return "GPUEvent::UnknownMessage";
     }
 }
 
@@ -107,9 +98,6 @@ std::string AppEvent::strMessage() const
 {
     switch (message)
     {
-    case AppMessage::Nothing:
-        return "AppEvent::Nothing";
-
     default:
         return "AppEvent::UnknownMessage";
     }

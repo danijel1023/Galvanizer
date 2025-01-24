@@ -1,10 +1,9 @@
 #pragma once
 
-#include <thread>
-
 #include "BaseWindow.h"
 #include "Factory.h"
 #include "EventLoop.h"
+#include "GLFW_BlockingObject.h"
 
 namespace Galvanizer
 {
@@ -19,13 +18,25 @@ public:
 
 protected:
     MainWindow(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap);
+    [[nodiscard]] bool OpenGLInitialised() const { return m_openGLInit; }
 
-private:
-    BlockingObject m_BO; // I have to order them like this because of initialization order
 
-protected:
     EventLoop p_eventLoop;
     EventLoopRef p_mainELRef;
     EventLoopRef* p_parentELRef = nullptr;
+    void* p_winHNDL = nullptr;
+    void* p_parentMainWindow = nullptr;
+
+private:
+    BlockingObject m_BO; // I have to order them like this because of initialization order
+    bool m_openGLInit = false;
+
+    std::thread m_renderThread;
+    std::atomic_bool m_renderRunning = false;
+    int m_renderRequests = 0;
+    std::binary_semaphore m_renderSemaphore = std::binary_semaphore(0);
+
+private:
+    void RenderLoop();
 };
 }

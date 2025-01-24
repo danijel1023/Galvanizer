@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "units.h"
+#include "GalvanizerRef.h"
 
 
 //[TODO] fix name
@@ -14,10 +15,10 @@
 protected:\
 friend class EventManager;\
 friend class Event;\
-inline static int _EventID = 0;\
+inline static int EventID_ = 0;\
 public:\
-static int GetEventID() { return _EventID; }\
-EventType() { m_type = _EventID; }
+static int GetEventID() { return EventID_; }\
+EventType() { m_type = EventID_; }
 
 
 
@@ -38,12 +39,6 @@ EventType() { m_type = _EventID; }
 
 namespace Galvanizer
 {
-class GalvanizerObject;
-class MainWindow;
-using GObjHNDL = GalvanizerObject*;
-using WinHNDL = MainWindow*;
-
-
 class EventManager
 {
 public:
@@ -57,7 +52,11 @@ public:
 
     std::string GetName(int EventType)
     {
-        return m_EIDNames[EventType - 1];
+        std::lock_guard lk(m_EIDMutex);
+        if (EventType < m_EIDCounter && EventType)
+            return m_EIDNames[EventType - 1];
+        else
+            return "[Unregistered Event Type]";
     }
 
 
@@ -78,7 +77,7 @@ private:
     {
         std::lock_guard lk(m_EIDMutex);
 
-        s::_EventID = m_EIDCounter++;
+        s::EventID_ = m_EIDCounter++;
         m_EIDNames.emplace_back(name);
         return true;
     }
@@ -107,7 +106,7 @@ public:
     template<class s>
     [[nodiscard]] bool IsType() const
     {
-        return m_type == s::_EventID;
+        return m_type == s::EventID_;
     }
 
     [[nodiscard]] int GetType() const
@@ -115,13 +114,13 @@ public:
         return m_type;
     }
 
-    virtual std::string strMessage() const = 0;
+    [[nodiscard]] virtual std::string strMessage() const = 0;
 
     EventVisibility visibility = {};
     ChildPriority priority = {};
 
     std::shared_ptr<Event> responseEvent;
-    GObjHNDL receiver = nullptr;
+    WeakRef receiver;
 
 protected:
     int m_type = 0;
@@ -132,12 +131,14 @@ protected:
 
 enum class ObjectMessage
 {
+    Undefined,
+
     Init,
     Close,  // Post it to the child's parent and with child as the argument. If there is no parent, post it to the child
     Terminate, Empty
 };
 
-struct ObjectEvent : public Event
+struct ObjectEvent : Event
 {
     EVENT_REGISTRATION_INTERFACE(ObjectEvent);
 
@@ -150,10 +151,11 @@ struct ObjectEvent : public Event
 
 enum class ELMessage
 {
+    Undefined,
     Run, Stop
 };
 
-struct ELEvent : public Event
+struct ELEvent : Event
 {
     EVENT_REGISTRATION_INTERFACE(ELEvent);
 
@@ -165,43 +167,82 @@ struct ELEvent : public Event
 
 enum class KeyAction
 {
-    Up, Down, Repeat
+    Undefined,
+    Press, Release, Repeat
+};
+
+enum class KeyButton
+{
+    Undefined, Unknown,
+    NonUS1 = 161, NonUS2,
+
+    Escape = 256, Enter, Tab, Backspace, Insert, Delete,
+    Right, Left, Down, Up,
+
+    PageUp, PageDown, Home, End,
+    CapsLock = 280, ScrollLock, NumLock, PrintScreen, Pause,
+
+    F1 = 290, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12, F13,
+    F14, F15, F16, F17, F18, F19, F20, F21, F22, F23, F24, F25,
+
+    KP0 = 320, KP1, KP2, KP3, KP4, KP5, KP6, KP7, KP8, KP9,
+    KPDecimal, KPDivide, KPMultiply, KPSubtract, KPAdd, KPEnter, KPEqual,
+
+    LeftShift = 340, LeftControl, LeftAlt, LeftSuper,
+    RightShift, RightControl, RightAlt, RightSuper,
+    Menu,
+
+    LowerBound = NonUS1, UpperBound = Menu
 };
 
 enum class KeyMessage
 {
-    Key, Text
+    Undefined,
+    Key, Codepoint
 };
 
-struct KeyEvent : public Event
+struct KeyEvent : Event
 {
     EVENT_REGISTRATION_INTERFACE(KeyEvent);
 
     [[nodiscard]] std::string strMessage() const override;
 
-    KeyAction action = {};
     KeyMessage message = {};
+    KeyButton button = {};
+    KeyAction action = {};
 
-    std::string str;
+    int codepoint = 0;
+    int scancode = 0;
+
+    bool modAlt = false, modCtrl = false, modShift = false, modSuper = false, modCaps = false, modNum = false;
 };
 
 
+enum class MouseAction
+{
+    Undefined,
+    Press, Release
+};
+
 enum class MouseButton
 {
-    R, M, L
+    Undefined,
+
+    R, M, L,
+
+    B1 = R, B2 = M, B3 = L,
+    B4, B5, B6, B7, B8
 };
 
 enum class MouseMessage
 {
-    Down, Up,
+    Undefined,
 
-    ScrollUp, ScrollDown,
-    ScrollLeft, ScrollRight,
-
+    Button, Scroll,
     Move, Enter, Leave
 };
 
-struct MouseEvent : public Event
+struct MouseEvent : Event
 {
     EVENT_REGISTRATION_INTERFACE(MouseEvent)
 
@@ -209,19 +250,29 @@ struct MouseEvent : public Event
 
     MouseMessage message = {};
     MouseButton button = {};
+    MouseAction action = {};
 
-    Vec2 pos;
-    bool modAlt = false, modCtrl = false, modShift = false;
+    Vec2 scrollOffset;
+    IVec2 pos;
+
+    bool modAlt = false, modCtrl = false, modShift = false, modSuper = false, modCaps = false, modNum = false;
 };
 
 
 enum class WindowMessage
 {
-    Iconify, Maximise, Restore,
-    Resize, Render
+    Undefined,
+
+    Maximise, Iconify, Restore,
+    Resize, Position, GainFocus, LoseFocus,
+    Close, Refresh,
+    RenderRequest, Render,
+
+    CreateWindow, DestroyWindow,
+    RegisterHNDL
 };
 
-struct WindowEvent : public Event
+struct WindowEvent : Event
 {
     EVENT_REGISTRATION_INTERFACE(WindowEvent)
 
@@ -229,42 +280,43 @@ struct WindowEvent : public Event
 
     WindowMessage message = {};
 
-    Vec2 pos, size;
+    void* winHNDL = nullptr;
+    WeakRef objHndl;
+
+    IVec2 pos, size;
     std::string name;
+    void* share = nullptr;
+    bool renderCorrection = false;
 };
 
 
-enum class GPUMessage
+enum class CursorType
 {
-    Init, Run, TerminateThread,
-    Render, LoadTexture
+    Undefined,
+    Arrow, IBeam, Crosshair, PointingHand,
+    ResizeHorizontal, ResizeVertical, ResizeTLBR, ResizeTRBL, ResizeAll,
+    NotAllowed,
+
+    LowerBound = Arrow, UpperBound = NotAllowed
 };
-
-struct GPUEvent : public Event
-{
-    EVENT_REGISTRATION_INTERFACE(GPUEvent)
-
-    [[nodiscard]] std::string strMessage() const override;
-
-    GPUMessage message = {};
-};
-
 
 enum class AppMessage
 {
-    Nothing
+    Undefined,
+    SetCursor, TimedEvent
 };
 
-struct AppEvent : public Event
+struct AppEvent : Event
 {
     EVENT_REGISTRATION_INTERFACE(AppEvent)
 
     [[nodiscard]] std::string strMessage() const override;
 
     AppMessage message = {};
+    CursorType cursorType = {};
+    void* winHNDL = nullptr;
 
-    void (*funcPtr)() = nullptr;
-
-    WinHNDL winHndl = nullptr;
+    WeakRef timerReceiver;
+    std::chrono::steady_clock::time_point timeout = {};
 };
 }

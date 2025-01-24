@@ -69,7 +69,7 @@ public:
 
         if (elm.strongCount == 1)
         {
-            if (elm.hndl->c_createdOnHeap)
+            if (elm.hndl && elm.hndl->c_createdOnHeap)
                 delete elm.hndl;
 
             elm.hndl = nullptr;
@@ -246,6 +246,11 @@ WeakRef& WeakRef::operator=(WeakRef&& right) noexcept
     m_hndl = g_RefDatabase.get(m_DBIndex);
 
     return *this;
+}
+
+bool WeakRef::operator==(const WeakRef& right) const
+{
+    return m_DBIndex == right.m_DBIndex;
 }
 
 WeakRef::~WeakRef()

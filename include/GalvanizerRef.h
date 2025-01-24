@@ -49,6 +49,8 @@ public:
     WeakRef& operator=(WeakRef const& right);
     WeakRef& operator=(WeakRef&& right) noexcept;
 
+    bool operator==(const WeakRef& right) const;
+
     ~WeakRef();
 
     [[nodiscard]] OwningRef lock() const;

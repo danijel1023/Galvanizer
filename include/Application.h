@@ -1,5 +1,7 @@
 #pragma once
 
+#include <list>
+
 #include "BaseWindow.h"
 #include "GLFW_BlockingObject.h"
 #include "EventLoop.h"
@@ -25,15 +27,25 @@ public:
 private:
     static inline GObjHNDL m_ApplicationThis;
 
-    // This is a hack that I hate so fk much.
+    // This is a hack that I hate so much.
     OwningRef m_strongAppRef;
 
     GLFW_BlockingObject m_BO;
     EventLoop m_eventLoop;
     EventLoopRef m_ELRef;
 
+    std::list<std::pair<WeakRef, void*>> m_winHNDLs;
+    void* m_cursors[10] = {};
+
+    std::thread m_timerThread;
+    std::vector<std::shared_ptr<Event>> m_timerEvents;
+    std::mutex m_timerEventsMutex;
+    std::atomic_bool m_timerRunning = false;
+
 private:
     uintptr_t Dispatcher(const std::shared_ptr<Event>& event) override;
     uintptr_t Callback(const std::shared_ptr<Event>& event) override;
+
+    void TimerLoop();
 };
 }

@@ -23,7 +23,7 @@ public:
     void Stop();
 
     // Thread safe
-    void PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver);
+    void PostEvent(const std::shared_ptr<Event>& event, const WeakRef& receiver);
     bool Running() { return m_running; }
 
 private:
@@ -37,7 +37,7 @@ private:
     GObjHNDL m_dispatchRef;
 
     std::condition_variable m_cv;
-    std::mutex m_mtx;
+    std::mutex m_startMutex;
     bool m_started = false;
 
     void Loop();
@@ -53,7 +53,7 @@ public:
     void Stop();
 
     // Will drop events while switching event loop reference
-    void PostEvent(const std::shared_ptr<Event>& event, GObjHNDL receiver);
+    void PostEvent(const std::shared_ptr<Event>& event, WeakRef receiver);
 
     // [WARN] Not thread safe!
     bool operator==(const EventLoopRef& right) const
