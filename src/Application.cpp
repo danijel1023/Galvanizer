@@ -3,14 +3,17 @@
 #include <iostream>
 
 #include "Application.h"
+
 #include "MainWindow.h"
 #include "Utility.h"
 #include "EventConfigurations.h"
 
 #include "GLFW/glfw3.h"
+#include "GLFWCallbacks.inl"
+
 
 using namespace Galvanizer;
-using namespace EventConfiguration;
+using namespace std::chrono_literals;
 
 
 Factory* Application::FindTarget(Factory* elm, std::string_view target) const
@@ -65,7 +68,6 @@ Application::Application()
     em.RegisterEvent<KeyEvent>("KeyEvent");
     em.RegisterEvent<MouseEvent>("MouseEvent");
     em.RegisterEvent<WindowEvent>("WindowEvent");
-    em.RegisterEvent<GPUEvent>("GPUEvent");
     em.RegisterEvent<AppEvent>("AppEvent");
     em.RegisterEvent<ObjectEvent>("ObjectEvent");
 
@@ -73,7 +75,19 @@ Application::Application()
     of.CreateOwner("app");
     of.Get(pc_internalName);
 
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
     glfwInit();
+
+    m_cursors[static_cast<int>(CursorType::Arrow) - 1] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
+    m_cursors[static_cast<int>(CursorType::IBeam) - 1] = glfwCreateStandardCursor(GLFW_IBEAM_CURSOR);
+    m_cursors[static_cast<int>(CursorType::Crosshair) - 1] = glfwCreateStandardCursor(GLFW_CROSSHAIR_CURSOR);
+    m_cursors[static_cast<int>(CursorType::PointingHand) - 1] = glfwCreateStandardCursor(GLFW_POINTING_HAND_CURSOR);
+    m_cursors[static_cast<int>(CursorType::ResizeHorizontal) - 1] = glfwCreateStandardCursor(GLFW_RESIZE_EW_CURSOR);
+    m_cursors[static_cast<int>(CursorType::ResizeVertical) - 1] = glfwCreateStandardCursor(GLFW_RESIZE_NS_CURSOR);
+    m_cursors[static_cast<int>(CursorType::ResizeTLBR) - 1] = glfwCreateStandardCursor(GLFW_RESIZE_NWSE_CURSOR);
+    m_cursors[static_cast<int>(CursorType::ResizeTRBL) - 1] = glfwCreateStandardCursor(GLFW_RESIZE_NESW_CURSOR);
+    m_cursors[static_cast<int>(CursorType::ResizeAll) - 1] = glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
+    m_cursors[static_cast<int>(CursorType::NotAllowed) - 1] = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR);
 }
 
 Application::~Application()
@@ -123,7 +137,7 @@ int Application::Run()
     m_strongAppRef = CreateOwningRef(this);
     p_weakSelf = m_strongAppRef;
 
-    const auto init = CreateObjectEvent<ObjectMessage::Init>();
+    const auto init = EventConfiguration::CreateObjectEvent<ObjectMessage::Init>();
     PostEvent(init);
 
     // Blocking call
@@ -141,8 +155,6 @@ uintptr_t Application::Dispatcher(const std::shared_ptr<Event>& event)
 }
 
 
-static GLFWwindow* window;
-
 uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
 {
     if (event->IsType<ObjectEvent>())
@@ -152,17 +164,19 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
         {
         case ObjectMessage::Init:
         {
-            window = glfwCreateWindow(640, 480, "Application window2", nullptr, nullptr);
-            glfwMakeContextCurrent(window);
+            m_timerRunning = true;
+            m_timerThread = std::thread(&Application::TimerLoop, this);
 
-            glfwSwapBuffers(window);
-            glfwPollEvents();
             break;
         }
 
         case ObjectMessage::Close:
         {
             std::cout << "[INFO] Application got Close signal!" << std::endl;
+
+            m_timerRunning = false;
+            m_timerThread.join();
+
             break;
         }
 
@@ -178,14 +192,72 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
             p_eventLoopRef->Stop();
             m_strongAppRef.DropOwnership();
 
-            glfwDestroyWindow(window);
-            window = nullptr;
             return 0;
         }
 
         default:
-            std::cout << "[ERROR] Application received unhandled event: " << event->strMessage() << std::endl;
+            //std::cout << "[ERROR] Application received unhandled event: " << event->strMessage() << std::endl;
             break;
+        }
+    }
+
+    else if (event->IsType<WindowEvent>())
+    {
+        auto& winEvent = static_cast<WindowEvent&>(*event);
+        switch (winEvent.message)
+        {
+        case WindowMessage::CreateWindow:
+        {
+            if (auto obj = winEvent.objHndl.lock())
+            {
+                glfwWindowHint(GLFW_SAMPLES, 32);
+                auto winHNDL = glfwCreateWindow(winEvent.size.x, winEvent.size.y, winEvent.name.c_str(), nullptr,
+                                                static_cast<GLFWwindow*>(winEvent.share));
+
+                glfwSetInputMode(winHNDL, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+
+                m_winHNDLs.emplace_back(obj, winHNDL);
+                glfwSetWindowUserPointer(winHNDL, &m_winHNDLs.back().first);
+
+                glfwSetKeyCallback(winHNDL, &GLFWKeyCallback);
+                glfwSetCharCallback(winHNDL, &GLFWCharCallback);
+
+                glfwSetCursorPosCallback(winHNDL, &GLFWCursorPosCallback);
+                glfwSetCursorEnterCallback(winHNDL, &GLFWCursorEnterCallback);
+                glfwSetMouseButtonCallback(winHNDL, &GLFWMouseButtonCallback);
+                glfwSetScrollCallback(winHNDL, &GLFWScrollCallback);
+
+                glfwSetWindowSizeCallback(winHNDL, &GLFWWindowSizeCallback);
+                glfwSetWindowPosCallback(winHNDL, &GLFWWindowPosCallback);
+                glfwSetWindowFocusCallback(winHNDL, &GLFWWindowFocusCallback);
+                glfwSetWindowCloseCallback(winHNDL, &GLFWWindowCloseCallback);
+                glfwSetWindowMaximizeCallback(winHNDL, &GLFWWindowMaximizeCallback);
+                glfwSetWindowIconifyCallback(winHNDL, &GLFWWindowIconifyCallback);
+                glfwSetWindowRefreshCallback(winHNDL, &GLFWWindowRefreshCallback);
+
+                obj->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RegisterHNDL>(winHNDL));
+            }
+            break;
+        }
+
+        case WindowMessage::DestroyWindow:
+        {
+            for (auto it = m_winHNDLs.begin(); it != m_winHNDLs.end(); it++)
+            {
+                if (it->first == winEvent.objHndl)
+                {
+                    glfwDestroyWindow(static_cast<GLFWwindow*>(it->second));
+                    m_winHNDLs.erase(it);
+
+                    break;
+                }
+            }
+
+            break;
+        }
+
+        default:
+            return -2;
         }
     }
 
@@ -194,10 +266,53 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
         auto& appEvent = static_cast<AppEvent&>(*event);
         switch (appEvent.message)
         {
+        case AppMessage::SetCursor:
+        {
+            if (appEvent.cursorType <= CursorType::UpperBound && appEvent.cursorType >= CursorType::LowerBound)
+                glfwSetCursor(static_cast<GLFWwindow*>(appEvent.winHNDL),
+                              static_cast<GLFWcursor*>(m_cursors[static_cast<int>(appEvent.cursorType) - 1]));
+
+            return 0;
+        }
+
+        case AppMessage::TimedEvent:
+        {
+            std::lock_guard lck(m_timerEventsMutex);
+            m_timerEvents.emplace_back(event);
+            return 0;
+        }
+
         default:
             return -2;
         }
     }
 
     return GalvanizerObject::Callback(event);
+}
+
+
+void Application::TimerLoop()
+{
+    std::cout << "[DEBUG] Starting TimerLoop." << std::endl;
+
+    while (m_timerRunning)
+    {
+        std::this_thread::sleep_for(1ms);
+
+        std::lock_guard lck(m_timerEventsMutex);
+        for (size_t i = 0; i < m_timerEvents.size(); i++)
+        {
+            auto& event = static_cast<AppEvent&>(*m_timerEvents[i]);
+            if (event.timeout - std::chrono::steady_clock::now() <= 0ms)
+            {
+                if (OwningRef obj = event.timerReceiver.lock())
+                    obj->PostEvent(event.responseEvent);
+
+                m_timerEvents.erase(m_timerEvents.begin() + i);
+                i--;
+            }
+        }
+    }
+
+    std::cout << "[DEBUG] Exiting TimerLoop." << std::endl;
 }

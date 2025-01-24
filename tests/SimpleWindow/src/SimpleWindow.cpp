@@ -3,10 +3,11 @@
 #include "Application.h"
 #include "SimpleWindow.h"
 
+
 #include "SimpleChild.h"
 #include "PluginWindow.h"
-#include "PluginWindowV2.h"
 #include "EventConfigurations.h"
+
 
 using namespace Galvanizer;
 using namespace EventConfiguration;
@@ -27,32 +28,100 @@ uintptr_t SimpleWindow::Dispatcher(const std::shared_ptr<Event>& event)
     return MainWindow::Dispatcher(event);
 }
 
-
 uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 {
     if (event->IsType<ObjectEvent>())
     {
         auto objEvent = static_cast<ObjectEvent&>(*event);
 
-        if (objEvent.message == ObjectMessage::Init)
+        switch (objEvent.message)
         {
-            Factory* originalFac = ObjectFactories::GetInstance().Get(GetTarget() + ".org");
-            originalFac->ptr = &SimpleChild::factory;
+        case ObjectMessage::Init:
+        {
+            auto& OF = ObjectFactories::GetInstance();
+            OF.Get(GetTarget() + ".org")->ptr = &SimpleChild::factory;
 
 
-            ObjectFactories::GetInstance().CreateOwner("plg");
-            Factory* pluginFac = ObjectFactories::GetInstance().Get(GetTarget() + ".org", "plg");
+            OF.CreateOwner("plg");
+            Factory* pluginFac = OF.Get(GetTarget() + ".org", "plg");
             pluginFac->ptr = &PluginWindow::factory;
             pluginFac->overridesOwner = "app";
 
+            break;
+        }
+
+        case ObjectMessage::Close:
+        {
+            MainWindow::Callback(event);
 
             std::cout << "====================================" << std::endl;
             std::cout << "Posting Close signal to application. thread-id: " << std::this_thread::get_id() << std::endl;
 
-            //auto target = this;
-            auto target = p_parent.lock();
+            auto& app = Application::get();
+            app.PostEvent(CreateObjectEvent<ObjectMessage::Close>(&app));
 
-            p_parent.lock()->PostEvent(CreateObjectEvent<ObjectMessage::Close>(target));
+            return 0;
+        }
+
+        default:
+            break;
+        }
+    }
+
+    else if (event->IsType<MouseEvent>())
+    {
+        auto mouseEvent = static_cast<MouseEvent&>(*event);
+
+        switch (mouseEvent.message)
+        {
+        default:
+            break;
+        }
+    }
+
+    else if (event->IsType<KeyEvent>())
+    {
+        auto keyEvent = static_cast<KeyEvent&>(*event);
+
+        switch (keyEvent.message)
+        {
+        case KeyMessage::Key:
+        {
+            if (keyEvent.action == KeyAction::Repeat)
+                break;
+
+
+            if (keyEvent.button < KeyButton::LowerBound)
+                std::cout << "Key: " << static_cast<char>(keyEvent.button) << std::endl;
+
+            else if (keyEvent.button == KeyButton::Right)
+            {
+                if (keyEvent.action == KeyAction::Release)
+                    break;
+
+                // Start from 2 bc when the app starts up, the cursor is already 1 (Arrow)
+                static auto cursorType = static_cast<CursorType>(2);
+                Application::get().PostEvent(
+                    EventConfiguration::CreateAppEvent<AppMessage::SetCursor>(cursorType, p_winHNDL));
+
+                // Abomination, but it werks
+                cursorType = static_cast<CursorType>(static_cast<int>(cursorType) + 1);
+
+                // Bound check
+                if (cursorType > static_cast<CursorType>(10))
+                    cursorType = static_cast<CursorType>(1);
+            }
+            break;
+        }
+
+        case KeyMessage::Codepoint:
+        {
+            std::cout << "Codepoint: " << static_cast<char>(keyEvent.codepoint) << std::endl;
+            break;
+        }
+
+        default:
+            break;
         }
     }
 

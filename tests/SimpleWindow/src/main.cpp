@@ -1,11 +1,9 @@
 #include <iostream>
-#include <oneapi/tbb/detail/_template_helpers.h>
 
 #include "Application.h"
 
 #include "../include/SimpleWindow.h"
 #include "../include/SimpleChild.h"
-#include "../vendor/glfw/include/GLFW/glfw3.h"
 
 
 using namespace Galvanizer;

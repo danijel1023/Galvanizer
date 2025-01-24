@@ -40,8 +40,7 @@ public:
 
     const bool c_createdOnHeap;
 
-    static inline std::vector<std::pair<std::string, std::pair<std::shared_ptr<Event>, std::thread::id>>>
-    events;
+    static inline std::vector<std::pair<std::string, std::pair<std::shared_ptr<Event>, std::thread::id>>> events;
     static inline std::mutex eventM;
 
 protected:

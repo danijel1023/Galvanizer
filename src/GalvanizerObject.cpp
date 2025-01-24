@@ -148,6 +148,7 @@ uintptr_t GalvanizerObject::Callback(const std::shared_ptr<Event>& event)
 
 
     eventM.lock();
+    //if (!event->IsType<MouseEvent>())
     events.emplace_back(GetTarget(), std::make_pair(event, std::this_thread::get_id()));
     eventM.unlock();
 
@@ -229,5 +230,5 @@ std::string GalvanizerObject::GetTarget() const
 
 void GalvanizerObject::PostEvent(const std::shared_ptr<Event>& event)
 {
-    p_eventLoopRef->PostEvent(event, this);
+    p_eventLoopRef->PostEvent(event, p_weakSelf);
 }

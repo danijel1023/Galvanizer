@@ -1,17 +1,18 @@
 #include "GLFW_BlockingObject.h"
 
-namespace Galvanizer
-{
-static std::binary_semaphore g_semaphore = std::binary_semaphore(0);
+#include <atomic>
+
+#include "GLFW/glfw3.h"
+
+using namespace Galvanizer;
 
 
 void GLFW_BlockingObject::WaitForEvent()
 {
-    g_semaphore.acquire();
+    glfwWaitEvents();
 }
 
 void GLFW_BlockingObject::Notify()
 {
-    g_semaphore.release();
-}
+    glfwPostEmptyEvent();
 }

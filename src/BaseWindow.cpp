@@ -36,5 +36,45 @@ uintptr_t BaseWindow::Dispatcher(const std::shared_ptr<Event>& event)
 
 uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
 {
+    if (event->IsType<WindowEvent>())
+    {
+        auto& winEvent = static_cast<WindowEvent&>(*event);
+
+        switch (winEvent.message)
+        {
+        case WindowMessage::Refresh:
+        {
+            auto renderRequest = std::make_shared<WindowEvent>();
+            renderRequest->visibility = EventVisibility::Single;
+            renderRequest->message = WindowMessage::RenderRequest;
+
+            PostEvent(renderRequest);
+            break;
+        }
+        case WindowMessage::Resize:
+        {
+            p_size = winEvent.size;
+
+            auto renderRequest = std::make_shared<WindowEvent>();
+            renderRequest->visibility = EventVisibility::Single;
+            renderRequest->message = WindowMessage::RenderRequest;
+
+            PostEvent(renderRequest);
+            break;
+        }
+
+        case WindowMessage::Position:
+        {
+            p_pos = winEvent.pos;
+            break;
+        }
+
+        default:
+            break;
+        }
+
+        return 0;
+    }
+
     return GalvanizerObject::Callback(event);
 }
