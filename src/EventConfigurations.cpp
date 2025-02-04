@@ -111,7 +111,8 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Refre
     event->visibility = EventVisibility::Single;
 }
 
-void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Render>, std::shared_ptr<WindowEvent> event)
+void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::RenderRequest>,
+                                           std::shared_ptr<WindowEvent> event)
 {
     event->visibility = EventVisibility::Single;
 }

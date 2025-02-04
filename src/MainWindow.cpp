@@ -167,6 +167,7 @@ void MainWindow::RenderLoop()
             render->visibility = EventVisibility::Root;
             render->priority = ChildPriority::First;
             render->message = WindowMessage::Render;
+            render->ignoreChildOnSeparateThread = true;
 
             //std::cout << "[DEBUG] Started rendering" << std::endl;
             Dispatcher(render);

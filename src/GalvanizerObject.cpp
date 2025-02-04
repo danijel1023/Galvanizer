@@ -51,10 +51,10 @@ uintptr_t GalvanizerObject::Dispatcher(const std::shared_ptr<Event>& event)
         for (const auto& ch: p_children)
         {
             // If the child is on another thread, add the event to its queue and continue
-            if (*ch->p_eventLoopRef != *p_eventLoopRef)
-                ch->PostEvent(event);
-            else
+            if (*ch->p_eventLoopRef == *p_eventLoopRef)
                 ch->Dispatcher(event);
+            else if (!event->ignoreChildOnSeparateThread)
+                ch->PostEvent(event);
         }
 
         if (event->priority == ChildPriority::First)

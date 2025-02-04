@@ -44,22 +44,14 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
         {
         case WindowMessage::Refresh:
         {
-            auto renderRequest = std::make_shared<WindowEvent>();
-            renderRequest->visibility = EventVisibility::Single;
-            renderRequest->message = WindowMessage::RenderRequest;
-
-            PostEvent(renderRequest);
+            PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>());
             break;
         }
         case WindowMessage::Resize:
         {
             p_size = winEvent.size;
 
-            auto renderRequest = std::make_shared<WindowEvent>();
-            renderRequest->visibility = EventVisibility::Single;
-            renderRequest->message = WindowMessage::RenderRequest;
-
-            PostEvent(renderRequest);
+            PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>());
             break;
         }
 

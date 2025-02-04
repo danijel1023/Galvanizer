@@ -122,6 +122,8 @@ public:
     std::shared_ptr<Event> responseEvent;
     WeakRef receiver;
 
+    bool ignoreChildOnSeparateThread = false;
+
 protected:
     int m_type = 0;
 

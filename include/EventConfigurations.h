@@ -32,16 +32,16 @@ void ConfigWindowEvent(WindowMessageTag<WindowMessage::RegisterHNDL>,  std::shar
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::CreateWindow>,  std::shared_ptr<WindowEvent> event, WeakRef ret, IVec2 size, std::string_view name, void* share);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::DestroyWindow>, std::shared_ptr<WindowEvent> event, WeakRef winHNDL);
 
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Maximise>,   std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Iconify>,    std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Restore>,    std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>,     std::shared_ptr<WindowEvent> event, IVec2 size);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,   std::shared_ptr<WindowEvent> event, IVec2 pos);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::GainFocus>,  std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::LoseFocus>,  std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Close>,      std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Refresh>,    std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Render>,     std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Maximise>,       std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Iconify>,        std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Restore>,        std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>,         std::shared_ptr<WindowEvent> event, IVec2 size);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,       std::shared_ptr<WindowEvent> event, IVec2 pos);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::GainFocus>,      std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::LoseFocus>,      std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Close>,          std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Refresh>,        std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::RenderRequest>,  std::shared_ptr<WindowEvent> event);
 
 template<WindowMessage msg, typename... Args>
 std::shared_ptr<WindowEvent> CreateWindowEvent(Args&&... args)
