@@ -50,10 +50,14 @@ uintptr_t GalvanizerObject::Dispatcher(const std::shared_ptr<Event>& event)
 
         for (const auto& ch: p_children)
         {
+            if (!ch->p_receiveRender && event->IsType<WindowEvent>()
+                && static_cast<WindowEvent&>(*event).message == WindowMessage::Render)
+                continue;
+
             // If the child is on another thread, add the event to its queue and continue
             if (*ch->p_eventLoopRef == *p_eventLoopRef)
                 ch->Dispatcher(event);
-            else if (!event->ignoreChildOnSeparateThread)
+            else
                 ch->PostEvent(event);
         }
 
