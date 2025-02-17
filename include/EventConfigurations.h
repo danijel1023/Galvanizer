@@ -93,7 +93,7 @@ void ConfigMouseEvent(MouseMessageTag<MouseMessage::Button>,    std::shared_ptr<
 void ConfigMouseEvent(MouseMessageTag<MouseMessage::Enter>,     std::shared_ptr<MouseEvent> event, IVec2 pos);
 void ConfigMouseEvent(MouseMessageTag<MouseMessage::Leave>,     std::shared_ptr<MouseEvent> event, IVec2 pos);
 void ConfigMouseEvent(MouseMessageTag<MouseMessage::Move>,      std::shared_ptr<MouseEvent> event, IVec2 pos);
-void ConfigMouseEvent(MouseMessageTag<MouseMessage::Scroll>,    std::shared_ptr<MouseEvent> event, IVec2 pos, Vec2 offset);
+void ConfigMouseEvent(MouseMessageTag<MouseMessage::Scroll>,    std::shared_ptr<MouseEvent> event, IVec2 pos, DVec2 offset);
 
 template<MouseMessage msg, typename... Args>
 std::shared_ptr<MouseEvent> CreateMouseEvent(Args&&... args)

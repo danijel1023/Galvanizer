@@ -254,7 +254,7 @@ struct MouseEvent : Event
     MouseButton button = {};
     MouseAction action = {};
 
-    Vec2 scrollOffset;
+    DVec2 scrollOffset;
     IVec2 pos;
 
     bool modAlt = false, modCtrl = false, modShift = false, modSuper = false, modCaps = false, modNum = false;

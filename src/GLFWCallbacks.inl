@@ -68,7 +68,7 @@ static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
         return;
 
 
-    Vec2 DPos;
+    DVec2 DPos;
     glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
     IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
 
@@ -107,7 +107,7 @@ static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action,
     else
         ma = MouseAction::Undefined;
 
-    Vec2 DPos;
+    DVec2 DPos;
     glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
     IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
 
@@ -130,11 +130,11 @@ static void GLFWScrollCallback(GLFWwindow* winHndl, double xOffset, double yOffs
         return;
 
 
-    Vec2 DPos;
+    DVec2 DPos;
     glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
     IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
 
-    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Scroll>(pos, Vec2(xOffset, yOffset)));
+    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Scroll>(pos, DVec2(xOffset, yOffset)));
 }
 
 

@@ -189,7 +189,7 @@ void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Move>, s
 }
 
 void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Scroll>, std::shared_ptr<MouseEvent> event,
-                                          IVec2 pos, Vec2 offset)
+                                          IVec2 pos, DVec2 offset)
 {
     event->visibility = EventVisibility::Single;
     event->pos = pos;

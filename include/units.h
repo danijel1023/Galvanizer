@@ -2,17 +2,17 @@
 
 namespace Galvanizer
 {
-struct Vec2
+struct DVec2
 {
     double x = 0, y = 0;
 };
 
-struct Vec3
+struct DVec3
 {
     double x = 0, y = 0, z = 0;
 };
 
-struct Vec4
+struct DVec4
 {
     double x = 0, y = 0, z = 0, a = 0;
 };
