@@ -1,8 +1,6 @@
 #pragma once
 #include <cstdio>   // I need it for size_t
 
-#include <iostream>
-
 namespace Galvanizer
 {
 class GalvanizerObject;

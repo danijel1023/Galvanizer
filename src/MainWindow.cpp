@@ -7,6 +7,8 @@
 #include "glad/glad.h"
 #include "GLFW/glfw3.h"
 
+#include "shaders/Default.inl"
+
 using namespace Galvanizer;
 using namespace EventConfiguration;
 using namespace std::chrono;
@@ -26,6 +28,11 @@ MainWindow::MainWindow(const std::string_view name, const WeakRef& parent, Facto
 
     p_mainWindow = this;
     p_eventLoop.Start();
+
+    p_vertShader = g_defaultVert;
+    p_fragShader = g_defaultFrag;
+
+    p_receiveRender = false;
 }
 
 MainWindow::~MainWindow()
@@ -37,6 +44,18 @@ MainWindow::~MainWindow()
 
 uintptr_t MainWindow::Dispatcher(const std::shared_ptr<Event>& event)
 {
+    if (event->IsType<WindowEvent>() &&
+        static_cast<WindowEvent&>(*event).message == WindowMessage::Render)
+    {
+        renderer.UpdateTextures();
+        renderer.Clear();
+
+        uintptr_t ret = BaseWindow::Dispatcher(event);
+
+        glfwSwapBuffers(static_cast<GLFWwindow*>(p_winHNDL));
+        return ret;
+    }
+
     return BaseWindow::Dispatcher(event);
 }
 
@@ -92,26 +111,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
             auto winHNDL = static_cast<GLFWwindow*>(winEvent.winHNDL);
             p_winHNDL = winHNDL;
 
-            glfwMakeContextCurrent(winHNDL);
-            glfwSwapBuffers(winHNDL);
-
-            if (!gladLoadGL())
-            {
-                std::cout << "[ERROR] GLAD: Failed to initialize OpenGL context" << std::endl;
-                return -1;
-            }
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_MULTISAMPLE);
-            glEnable(GL_SCISSOR_TEST);
-
-            glClearColor((25.0f / 255.0f), (40.0f / 255.0f), (90.0f / 255.0f), 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            glfwSwapBuffers(winHNDL);
-
-            glfwMakeContextCurrent(nullptr);
-
+            // Set *Before* starting the thread - otherwise, its race condition in waiting
             m_renderRunning = true;
             m_renderThread = std::thread(&MainWindow::RenderLoop, this);
 
@@ -127,14 +127,15 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
             return 0;
         }
 
-        case WindowMessage::Render:
+        case WindowMessage::RenderInit:
         {
-            glViewport(0, 0, p_size.x, p_size.y);
-            glScissor(0, 0, p_size.x, p_size.y);
+            renderer.Init(p_vertShader, p_fragShader);
+            break;
+        }
 
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            glfwSwapBuffers(static_cast<GLFWwindow*>(p_winHNDL));
+        case WindowMessage::RenderExit:
+        {
+            renderer.Exit();
             break;
         }
 
@@ -157,6 +158,25 @@ void MainWindow::RenderLoop()
 {
     glfwMakeContextCurrent(static_cast<GLFWwindow*>(p_winHNDL));
 
+    if (!gladLoadGL())
+    {
+        std::cout << "[ERROR] GLAD: Failed to initialize OpenGL context" << std::endl;
+        return;
+    }
+
+    glEnable(GL_MULTISAMPLE);
+    glEnable(GL_SCISSOR_TEST);
+
+    auto renderInit = std::make_shared<WindowEvent>();
+    renderInit->visibility = EventVisibility::Root;
+    renderInit->priority = ChildPriority::Last;
+    renderInit->message = WindowMessage::RenderInit;
+    renderInit->ignoreChildOnSeparateThread = true;
+    Dispatcher(renderInit);
+
+    PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>());
+    PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>());
+
     while (m_renderRunning)
     {
         m_renderSemaphore.acquire();
@@ -165,7 +185,7 @@ void MainWindow::RenderLoop()
         {
             auto render = std::make_shared<WindowEvent>();
             render->visibility = EventVisibility::Root;
-            render->priority = ChildPriority::First;
+            render->priority = ChildPriority::Last;
             render->message = WindowMessage::Render;
             render->ignoreChildOnSeparateThread = true;
 
@@ -176,6 +196,14 @@ void MainWindow::RenderLoop()
             m_renderRequests--;
         }
     }
+
+
+    auto renderExit = std::make_shared<WindowEvent>();
+    renderExit->visibility = EventVisibility::Root;
+    renderExit->priority = ChildPriority::Last;
+    renderExit->message = WindowMessage::RenderExit;
+    renderExit->ignoreChildOnSeparateThread = true;
+    Dispatcher(renderExit);
 
     glfwSetWindowUserPointer(static_cast<GLFWwindow*>(p_winHNDL), nullptr);
     glfwMakeContextCurrent(nullptr);

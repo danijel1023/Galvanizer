@@ -76,6 +76,7 @@ Application::Application()
     of.Get(pc_internalName);
 
     glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_WAYLAND);
+    //glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
     glfwInit();
 
     m_cursors[static_cast<int>(CursorType::Arrow) - 1] = glfwCreateStandardCursor(GLFW_ARROW_CURSOR);
@@ -237,7 +238,8 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
 
                 obj->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RegisterHNDL>(winHNDL));
             }
-            break;
+
+            return 0;
         }
 
         case WindowMessage::DestroyWindow:
@@ -279,6 +281,7 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
         {
             std::lock_guard lck(m_timerEventsMutex);
             m_timerEvents.emplace_back(event);
+
             return 0;
         }
 

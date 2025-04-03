@@ -1,9 +1,8 @@
 #pragma once
 
-#include <string>
-
 #include "BaseWindow.h"
 #include "MainWindow.h"
+#include "Quad.h"
 
 
 class SimpleWindow : public Galvanizer::MainWindow
@@ -19,4 +18,8 @@ public:
 protected:
     SimpleWindow(std::string_view name, const Galvanizer::WeakRef& parent, Galvanizer::Factory* originFac,
                  bool createdOnHeap);
+
+private:
+    Galvanizer::Quad m_bkg, m_circle, m_texQuad, m_texCircle;
+    std::shared_ptr<Galvanizer::QuadTex> m_tex;
 };

@@ -250,6 +250,7 @@ WeakRef& WeakRef::operator=(WeakRef&& right) noexcept
 
 bool WeakRef::operator==(const WeakRef& right) const
 {
+    g_RefDatabase.get(m_DBIndex);
     return m_DBIndex == right.m_DBIndex;
 }
 

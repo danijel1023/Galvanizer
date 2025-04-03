@@ -3,9 +3,26 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(GalvanizerProj VERSION 0.0.0)
 
-#Create library
+
+# Generate Shaders on project configuration
+execute_process(
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/src/shaders/"
+        COMMAND python "GenDefShader.py"
+)
+
+# Generate Shaders if out of date on project build
+set(ShadersDir "${CMAKE_SOURCE_DIR}/src/shaders")
+add_custom_command(
+        WORKING_DIRECTORY "${ShadersDir}"
+        COMMAND python "GenDefShader.py"
+
+        DEPENDS "${ShadersDir}/Default.frag" "${ShadersDir}/Default.vert" "${ShadersDir}/GenDefShader.py"
+        OUTPUT "${ShadersDir}/Default.inl"
+)
+
+# Create library
 file(GLOB_RECURSE SRC_FILES "src/*.cpp")
-add_library(Galvanizer STATIC ${SRC_FILES})
+add_library(Galvanizer STATIC ${SRC_FILES} "${ShadersDir}/Default.inl")
 
 target_include_directories(Galvanizer PRIVATE "include" "vendor/glfw/include" "vendor/stb/include")
 target_compile_definitions(Galvanizer PUBLIC GALVANIZER_STATIC)

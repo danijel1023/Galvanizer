@@ -183,15 +183,15 @@ uintptr_t GalvanizerObject::Callback(const std::shared_ptr<Event>& event)
                     ch->Dispatcher(EventConfiguration::CreateObjectEvent<ObjectMessage::Init>());
             }
 
-            break;
+            return 0;
         }
 
         default:
-            break;
+            return -1;
         }
     }
 
-    else if (event->IsType<ELEvent>())
+    if (event->IsType<ELEvent>())
     {
         auto elEvent = static_cast<ELEvent&>(*event);
         const auto lockedParent = p_parent.lock();
@@ -199,9 +199,11 @@ uintptr_t GalvanizerObject::Callback(const std::shared_ptr<Event>& event)
         // If current thread is not the same as the thread of the parent object, stop the current thread
         if (elEvent.message == ELMessage::Stop && lockedParent && *p_eventLoopRef != *lockedParent->p_eventLoopRef)
             p_eventLoopRef->set(lockedParent->p_eventLoopRef);
+
+        return 0;
     }
 
-    return 0;
+    return -1;
 }
 
 

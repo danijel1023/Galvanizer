@@ -268,7 +268,9 @@ enum class WindowMessage
     Maximise, Iconify, Restore,
     Resize, Position, GainFocus, LoseFocus,
     Close, Refresh,
-    RenderRequest, Render,
+
+    RenderInit, RenderExit,
+    Render, RenderRequest,
 
     CreateWindow, DestroyWindow,
     RegisterHNDL
