@@ -1,5 +1,7 @@
 #include "EventConfigurations.h"
 
+#include <utility>
+
 using namespace Galvanizer;
 using namespace EventConfiguration;
 
@@ -49,14 +51,14 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Creat
     event->size = size;
     event->name = name;
     event->share = share;
-    event->objHndl = ret;
+    event->objHndl = std::move(ret);
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::DestroyWindow>,
                                            std::shared_ptr<WindowEvent> event, WeakRef win)
 {
     event->visibility = EventVisibility::Single;
-    event->objHndl = win;
+    event->objHndl = std::move(win);
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Maximise>,
@@ -76,13 +78,29 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Resto
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>, std::shared_ptr<WindowEvent> event,
-                                           IVec2 size)
+                                           WeakRef winHNDL, IVec2 size)
+{
+    event->visibility = EventVisibility::Single;
+    event->objHndl = std::move(winHNDL);
+    event->size = size;
+}
+
+void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::ResizeRequest>,
+                                           std::shared_ptr<WindowEvent> event, IVec2 size)
 {
     event->visibility = EventVisibility::Single;
     event->size = size;
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,
+                                           std::shared_ptr<WindowEvent> event, WeakRef winHNDL, IVec2 pos)
+{
+    event->visibility = EventVisibility::Single;
+    event->objHndl = std::move(winHNDL);
+    event->pos = pos;
+}
+
+void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::PositionRequest>,
                                            std::shared_ptr<WindowEvent> event, IVec2 pos)
 {
     event->visibility = EventVisibility::Single;

@@ -229,7 +229,6 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
                 glfwSetScrollCallback(winHNDL, &GLFWScrollCallback);
 
                 glfwSetWindowSizeCallback(winHNDL, &GLFWWindowSizeCallback);
-                glfwSetWindowPosCallback(winHNDL, &GLFWWindowPosCallback);
                 glfwSetWindowFocusCallback(winHNDL, &GLFWWindowFocusCallback);
                 glfwSetWindowCloseCallback(winHNDL, &GLFWWindowCloseCallback);
                 glfwSetWindowMaximizeCallback(winHNDL, &GLFWWindowMaximizeCallback);
@@ -255,7 +254,25 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
                 }
             }
 
-            break;
+            return 0;
+        }
+
+        case WindowMessage::Resize:
+        {
+            auto target = winEvent.objHndl.lock();
+            if (target)
+            {
+                for (auto& m_winHNDL: m_winHNDLs)
+                {
+                    if (m_winHNDL.first == winEvent.objHndl)
+                    {
+                        glfwSetWindowSize(static_cast<GLFWwindow*>(m_winHNDL.second), winEvent.size.x, winEvent.size.y);
+                        break;
+                    }
+                }
+            }
+
+            return 0;
         }
 
         default:

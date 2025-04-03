@@ -1,8 +1,5 @@
-#include <iostream>
-
 #include "BaseWindow.h"
 #include "MainWindow.h"
-#include "Application.h"
 
 #include "EventConfigurations.h"
 
@@ -30,6 +27,22 @@ BaseWindow::~BaseWindow() = default;
 
 uintptr_t BaseWindow::Dispatcher(const std::shared_ptr<Event>& event)
 {
+    if (event->IsType<WindowEvent>())
+    {
+        if (auto winEvent = static_cast<WindowEvent&>(*event); winEvent.message == WindowMessage::Render)
+        {
+            // Add my pos to absolute pos
+            winEvent.pos += p_pos;
+
+            // Send to children and call the callback
+            auto ret = GalvanizerObject::Dispatcher(event);
+
+            // Remove my pos from absolute pos
+            winEvent.pos -= p_pos;
+            return ret;
+        }
+    }
+
     return GalvanizerObject::Dispatcher(event);
 }
 
@@ -44,28 +57,42 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
         {
         case WindowMessage::Refresh:
         {
-            PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>());
-            break;
+            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
+            return 0;
         }
+
         case WindowMessage::Resize:
         {
-            p_size = winEvent.size;
+            auto target = winEvent.objHndl.lock();
+            if (target && target != p_weakSelf.lock())
+            {
+                target->PostEvent(CreateWindowEvent<WindowMessage::Resize>(winEvent.objHndl, winEvent.size));
+                return 0;
+            }
 
-            PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>());
-            break;
+            p_size = winEvent.size;
+            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
+
+            return 0;
         }
 
         case WindowMessage::Position:
         {
             p_pos = winEvent.pos;
-            break;
+            return 0;
+        }
+
+        case WindowMessage::ResizeRequest:
+        {
+            if (auto target = winEvent.objHndl.lock())
+                p_parent.lock()->PostEvent(CreateWindowEvent<WindowMessage::Resize>(target, winEvent.size));
+
+            return 0;
         }
 
         default:
-            break;
+            return 0;
         }
-
-        return 0;
     }
 
     return GalvanizerObject::Callback(event);

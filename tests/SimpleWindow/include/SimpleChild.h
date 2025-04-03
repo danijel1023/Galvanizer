@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BaseWindow.h"
+#include "Quad.h"
 
 
 class SimpleChild : public Galvanizer::BaseWindow
@@ -15,4 +16,7 @@ public:
 protected:
     SimpleChild(std::string_view name, const Galvanizer::WeakRef& parent, Galvanizer::Factory* originFac,
                 bool createdOnHeap);
+
+private:
+    Galvanizer::Quad m_bkg;
 };

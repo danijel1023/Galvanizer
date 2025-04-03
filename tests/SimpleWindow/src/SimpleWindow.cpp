@@ -97,6 +97,14 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
         switch (mouseEvent.message)
         {
+        case MouseMessage::Button:
+        {
+            if (mouseEvent.action == MouseAction::Press && mouseEvent.button == MouseButton::L)
+                PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::ResizeRequest>(IVec2(300, 300)));
+
+            return 0;
+        }
+
         default:
             break;
         }

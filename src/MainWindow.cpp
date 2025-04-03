@@ -69,8 +69,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
         {
         case ObjectMessage::Init:
         {
-            p_size = {300, 300};
-
+            // [TODO] Fix this: CreateWindow takes in a char* for name, horrible!!!
             thread_local std::string name = GetTarget();
             auto createWin = CreateWindowEvent<WindowMessage::CreateWindow>(p_weakSelf, p_size,
                                                                             name.c_str(), p_parentMainWindow);
@@ -145,8 +144,25 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
             break;
         }
 
+        case WindowMessage::ResizeRequest:
+        {
+            Application::get().PostEvent(CreateWindowEvent<WindowMessage::Resize>(p_weakSelf, winEvent.size));
+            return 0;
+        }
+
         default:
             break;
+        }
+    }
+
+    else if (event->IsType<MouseEvent>())
+    {
+        auto& mouseEvent = static_cast<MouseEvent&>(*event);
+
+        switch (mouseEvent.message)
+        {
+        default:
+            return 0;
         }
     }
 

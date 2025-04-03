@@ -58,6 +58,11 @@ static void GLFWCursorPosCallback(GLFWwindow* winHndl, double xPos, double yPos)
 
 
     IVec2 pos(static_cast<int>(std::floor(xPos)), static_cast<int>(std::floor(yPos)));
+
+    IVec2 winSize;
+    glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
+    pos = {pos.x ,winSize.y - pos.y};
+
     This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Move>(pos));
 }
 
@@ -71,6 +76,10 @@ static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
     DVec2 DPos;
     glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
     IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
+
+    IVec2 winSize;
+    glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
+    pos = {pos.x ,winSize.y - pos.y};
 
     if (entered)
         This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Enter>(pos));
@@ -96,7 +105,7 @@ static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action,
     case GLFW_MOUSE_BUTTON_6:       mb = MouseButton::B6; break;
     case GLFW_MOUSE_BUTTON_7:       mb = MouseButton::B7; break;
     case GLFW_MOUSE_BUTTON_8:       mb = MouseButton::B8; break;
-    default: return;    //Not supported
+    default: return;    // Not supported
     }
 
     MouseAction ma;
@@ -110,6 +119,10 @@ static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action,
     DVec2 DPos;
     glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
     IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
+
+    IVec2 winSize;
+    glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
+    pos = {pos.x ,winSize.y - pos.y};
 
     auto event = EventConfiguration::CreateMouseEvent<MouseMessage::Button>(pos, mb, ma);
 
@@ -134,6 +147,10 @@ static void GLFWScrollCallback(GLFWwindow* winHndl, double xOffset, double yOffs
     glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
     IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
 
+    IVec2 winSize;
+    glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
+    pos = {pos.x ,winSize.y - pos.y};
+
     This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Scroll>(pos, DVec2(xOffset, yOffset)));
 }
 
@@ -146,17 +163,7 @@ static void GLFWWindowSizeCallback(GLFWwindow* winHndl, int width, int height)
         return;
 
 
-    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(IVec2(width, height)));
-}
-
-static void GLFWWindowPosCallback(GLFWwindow* winHndl, int xPos, int yPos)
-{
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
-    if (!This)
-        return;
-
-
-    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Position>(IVec2(xPos, yPos)));
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(This, IVec2(width, height)));
 }
 
 static void GLFWWindowFocusCallback(GLFWwindow* winHndl, int focused)

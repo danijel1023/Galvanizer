@@ -266,7 +266,8 @@ enum class WindowMessage
     Undefined,
 
     Maximise, Iconify, Restore,
-    Resize, Position, GainFocus, LoseFocus,
+    Resize, ResizeRequest, Position, PositionRequest,
+    GainFocus, LoseFocus,
     Close, Refresh,
 
     RenderInit, RenderExit,

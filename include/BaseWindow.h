@@ -1,8 +1,5 @@
 #pragma once
 
-#include <string>
-#include <vector>
-
 #include "units.h"
 #include "Events.h"
 #include "GalvanizerObject.h"
@@ -33,5 +30,6 @@ protected:
 protected:
     WinHNDL p_mainWindow = nullptr; // TODO make this also smart pointer... maybe?
     IVec2 p_size, p_pos;
+    bool p_overlay = false;
 };
 }

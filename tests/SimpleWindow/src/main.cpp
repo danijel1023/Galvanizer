@@ -31,13 +31,6 @@ int main()
         factory->ptr = &SimpleWindow::factory;
 
 
-        Factory* ch1Fac = ObjectFactories::GetInstance().Get("app.SimpleWindow.child-1");
-        ch1Fac->ptr = &SimpleChild::factory;
-
-        Factory* ch0Fac = ObjectFactories::GetInstance().Get("app.SimpleWindow.child-0");
-        ch0Fac->ptr = &SimpleChild::factory;
-
-
         app.Run();
 
         ObjectFactories::Shutdown();
