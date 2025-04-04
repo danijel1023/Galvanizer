@@ -17,7 +17,7 @@ using BWinHNDL = BaseWindow*;
 class BaseWindow : public GalvanizerObject
 {
 public:
-    static GObjHNDL factory(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap);
+    static std::shared_ptr<GObj> factory(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac);
     ~BaseWindow() override;
 
 
@@ -25,7 +25,7 @@ public:
     uintptr_t Dispatcher(const std::shared_ptr<Event>& event) override;
 
 protected:
-    BaseWindow(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap);
+    BaseWindow(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac);
 
 protected:
     WinHNDL p_mainWindow = nullptr; // TODO make this also smart pointer... maybe?

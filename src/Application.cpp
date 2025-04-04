@@ -15,52 +15,32 @@
 using namespace Galvanizer;
 using namespace std::chrono_literals;
 
-
-Factory* Application::FindTarget(Factory* elm, std::string_view target) const
+namespace
 {
-    if (!Utility::ValidateKeys(target))
-    {
-        std::cout << "[ERROR] ValidateKeys failed for: \"" << target << "\"" << std::endl;
-        return nullptr;
-    }
-
-    std::vector<std::string> keys = Utility::ExtractKeys(target);
-    if (keys.empty())
-    {
-        std::cout << "[WARN]: No keys extracted for \"" << target << "\"" << std::endl;
-        return elm;
-    }
-
-
-    for (auto& key: keys)
-    {
-        bool found = false;
-        for (const auto& elmCh: elm->children)
-        {
-            if (elmCh->name != key)
-                continue;
-
-            found = true;
-            elm = elmCh;
-            break;
-        }
-
-        if (!found) // Create new element with this key
-        {
-            elm->children.push_back(new Factory(key, elm));
-            elm = elm->children.back();
-        }
-    }
-
-    return elm;
+struct Application_Shared : Application
+{
+    template<typename... Args>
+    Application_Shared(Args&&... args): Application(std::forward<Args>(args)...) {}
+};
 }
 
+void Application::Init()
+{
+    m_ApplicationThis = std::make_shared<Application_Shared>();
+    m_ApplicationThis->p_weakSelf = m_ApplicationThis;
+}
+
+
+std::shared_ptr<Application> Application::get()
+{
+    return m_ApplicationThis;
+}
+
+
 Application::Application()
-    : GalvanizerObject("app", WeakRef(), nullptr, false), m_eventLoop(&m_BO, this, false),
+    : GalvanizerObject("app", std::weak_ptr<GObj>(), nullptr), m_eventLoop(&m_BO, false),
       m_ELRef(&m_eventLoop)
 {
-    m_ApplicationThis = this;
-
     p_displayName = "Application";
     p_eventLoopRef = &m_ELRef;
 
@@ -97,13 +77,8 @@ Application::~Application()
 }
 
 
-Application& Application::get()
-{
-    return static_cast<Application&>(*m_ApplicationThis);
-}
 
-
-OwningRef Application::FindGObj(const std::string_view target)
+std::shared_ptr<GObj> Application::FindGObj(const std::string_view target)
 {
     if (!Utility::ValidateKeys(target))
     {
@@ -113,7 +88,7 @@ OwningRef Application::FindGObj(const std::string_view target)
 
     const std::vector<std::string> keys = Utility::ExtractKeys(target);
 
-    std::vector<OwningRef> obj;
+    std::vector<std::shared_ptr<GObj>> obj;
     obj.reserve(keys.size());
 
     obj.emplace_back(p_weakSelf.lock());
@@ -134,10 +109,6 @@ OwningRef Application::FindGObj(const std::string_view target)
 
 int Application::Run()
 {
-    // Will NOT crash on exit if the application was made on stack - hotfix on OwningRef
-    m_strongAppRef = CreateOwningRef(this);
-    p_weakSelf = m_strongAppRef;
-
     const auto init = EventConfiguration::CreateObjectEvent<ObjectMessage::Init>();
     PostEvent(init);
 
@@ -183,7 +154,7 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
 
         case ObjectMessage::Terminate:
         {
-            if (objectEvent.objHndl != this)
+            if (objectEvent.objHndl.lock() != p_weakSelf.lock())
                 break;
 
             std::cout << "[INFO] Application got Terminate signal." << std::endl;
@@ -191,7 +162,7 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
             GalvanizerObject::Callback(event);
 
             p_eventLoopRef->Stop();
-            m_strongAppRef.DropOwnership();
+            m_ApplicationThis.reset();
 
             return 0;
         }
@@ -245,7 +216,7 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
         {
             for (auto it = m_winHNDLs.begin(); it != m_winHNDLs.end(); it++)
             {
-                if (it->first == winEvent.objHndl)
+                if (it->first.lock() == winEvent.objHndl.lock())
                 {
                     glfwDestroyWindow(static_cast<GLFWwindow*>(it->second));
                     m_winHNDLs.erase(it);
@@ -264,7 +235,7 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
             {
                 for (auto& m_winHNDL: m_winHNDLs)
                 {
-                    if (m_winHNDL.first == winEvent.objHndl)
+                    if (m_winHNDL.first.lock() == winEvent.objHndl.lock())
                     {
                         glfwSetWindowSize(static_cast<GLFWwindow*>(m_winHNDL.second), winEvent.size.x, winEvent.size.y);
                         break;
@@ -325,7 +296,7 @@ void Application::TimerLoop()
             auto& event = static_cast<AppEvent&>(*m_timerEvents[i]);
             if (event.timeout - std::chrono::steady_clock::now() <= 0ms)
             {
-                if (OwningRef obj = event.timerReceiver.lock())
+                if (std::shared_ptr obj = event.timerReceiver.lock())
                     obj->PostEvent(event.responseEvent);
 
                 m_timerEvents.erase(m_timerEvents.begin() + i);

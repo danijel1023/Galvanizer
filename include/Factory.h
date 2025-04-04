@@ -1,7 +1,6 @@
 #pragma once
 
-#include "GalvanizerRef.h"
-
+#include <memory>
 #include <vector>
 #include <string>
 #include <mutex>
@@ -10,10 +9,11 @@
 namespace Galvanizer
 {
 class GalvanizerObject;
+using GObj = GalvanizerObject;
+
 struct Factory;
-using GObjHNDL = GalvanizerObject*;
-using GObjFactoryPtr = GObjHNDL(*)(std::string_view name, const WeakRef& parent, Factory* originFac,
-                                   bool createdOnHeap);
+using GObjFactoryPtr = std::shared_ptr<GObj>(*)(std::string_view name, const std::weak_ptr<GObj>& parent,
+                                                Factory* originFac);
 
 
 struct Factory
@@ -91,7 +91,11 @@ public:
 
     bool CreateOwner(std::string_view owner);
 
-    std::vector<OwningRef> Build(const OwningRef& pathObj);
+
+    // Used to FindChild a specified windows (target) factory
+    static Factory* FindTarget(Factory* elm, std::string_view target);
+
+    std::vector<std::shared_ptr<GObj>> Build(const std::shared_ptr<GObj>& pathObj);
 
 private:
     ObjectFactories();

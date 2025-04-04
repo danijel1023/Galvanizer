@@ -3,7 +3,6 @@
 #include "Application.h"
 
 #include "../include/SimpleWindow.h"
-#include "../include/SimpleChild.h"
 
 
 using namespace Galvanizer;
@@ -16,7 +15,10 @@ int main()
     for (int i = 0; i < 1; i++)
     {
         ObjectFactories::Init();
-        Application app;
+        Application::Init();
+
+        std::weak_ptr app = Application::get();
+
         //app.EnablePlugins(Application::DefaultPluginLocation);
 
         std::string SWFactory = "app.SimpleWindow";
@@ -31,7 +33,7 @@ int main()
         factory->ptr = &SimpleWindow::factory;
 
 
-        app.Run();
+        app.lock()->Run();
 
         ObjectFactories::Shutdown();
 

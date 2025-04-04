@@ -10,12 +10,12 @@
 namespace Galvanizer
 {
 class GalvanizerObject;
-using GObjHNDL = GalvanizerObject*;
+using GObj = GalvanizerObject;
 
 class EventLoop
 {
 public:
-    EventLoop(IBlockingObject* BO, GObjHNDL dispatchRef, bool async = true);
+    EventLoop(IBlockingObject* BO, bool async = true);
     ~EventLoop();
 
     // If async is set to false, Start() function WILL BLOCK the calling thread
@@ -23,7 +23,7 @@ public:
     void Stop();
 
     // Thread safe
-    void PostEvent(const std::shared_ptr<Event>& event, const WeakRef& receiver);
+    void PostEvent(const std::shared_ptr<Event>& event, const std::weak_ptr<GObj>& receiver);
     bool Running() { return m_running; }
 
 private:
@@ -33,8 +33,6 @@ private:
     bool m_async = false;
     volatile std::atomic<bool> m_running;
     std::mutex m_stopMutex;
-
-    GObjHNDL m_dispatchRef;
 
     std::condition_variable m_cv;
     std::mutex m_startMutex;
@@ -53,7 +51,7 @@ public:
     void Stop();
 
     // Will drop events while switching event loop reference
-    void PostEvent(const std::shared_ptr<Event>& event, WeakRef receiver);
+    void PostEvent(const std::shared_ptr<Event>& event, std::weak_ptr<GObj> receiver);
 
     // [WARN] Not thread safe!
     bool operator==(const EventLoopRef& right) const

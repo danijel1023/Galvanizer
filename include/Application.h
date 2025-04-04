@@ -11,30 +11,27 @@ namespace Galvanizer
 class Application : public GalvanizerObject
 {
 public:
-    Application();
     ~Application() override;
-    Application(Application const&&) = delete;
-    static Application& get();
+
+    static void Init();
+    static std::shared_ptr<Application> get();
 
     int Run();
 
     // Target window -> path + name
-    OwningRef FindGObj(std::string_view target);
+    std::shared_ptr<GObj> FindGObj(std::string_view target);
 
-    // Used to FindChild a specified windows (target) factory
-    Factory* FindTarget(Factory* elm, std::string_view target) const;
+protected:
+    Application();
 
 private:
-    static inline GObjHNDL m_ApplicationThis;
-
-    // This is a hack that I hate so much.
-    OwningRef m_strongAppRef;
+    static inline std::shared_ptr<Application> m_ApplicationThis;
 
     GLFW_BlockingObject m_BO;
     EventLoop m_eventLoop;
     EventLoopRef m_ELRef;
 
-    std::list<std::pair<WeakRef, void*>> m_winHNDLs;
+    std::list<std::pair<std::weak_ptr<GObj>, void*>> m_winHNDLs;
     void* m_cursors[10] = {};
 
     std::thread m_timerThread;

@@ -7,7 +7,7 @@ namespace Galvanizer
 {
 static void GLFWKeyCallback(GLFWwindow* winHndl, int key, int scancode, int action, int mods)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -41,7 +41,7 @@ static void GLFWKeyCallback(GLFWwindow* winHndl, int key, int scancode, int acti
 
 static void GLFWCharCallback(GLFWwindow* winHndl, unsigned int codePoint)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -52,7 +52,7 @@ static void GLFWCharCallback(GLFWwindow* winHndl, unsigned int codePoint)
 
 static void GLFWCursorPosCallback(GLFWwindow* winHndl, double xPos, double yPos)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -68,7 +68,7 @@ static void GLFWCursorPosCallback(GLFWwindow* winHndl, double xPos, double yPos)
 
 static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -89,7 +89,7 @@ static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
 
 static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action, int mods)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -138,7 +138,7 @@ static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action,
 
 static void GLFWScrollCallback(GLFWwindow* winHndl, double xOffset, double yOffset)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -158,7 +158,7 @@ static void GLFWScrollCallback(GLFWwindow* winHndl, double xOffset, double yOffs
 
 static void GLFWWindowSizeCallback(GLFWwindow* winHndl, int width, int height)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -168,7 +168,7 @@ static void GLFWWindowSizeCallback(GLFWwindow* winHndl, int width, int height)
 
 static void GLFWWindowFocusCallback(GLFWwindow* winHndl, int focused)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -181,7 +181,7 @@ static void GLFWWindowFocusCallback(GLFWwindow* winHndl, int focused)
 
 static void GLFWWindowCloseCallback(GLFWwindow* winHndl)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -191,7 +191,7 @@ static void GLFWWindowCloseCallback(GLFWwindow* winHndl)
 
 static void GLFWWindowMaximizeCallback(GLFWwindow* winHndl, int maximized)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -204,7 +204,7 @@ static void GLFWWindowMaximizeCallback(GLFWwindow* winHndl, int maximized)
 
 static void GLFWWindowIconifyCallback(GLFWwindow* winHndl, int iconified)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 
@@ -217,7 +217,7 @@ static void GLFWWindowIconifyCallback(GLFWwindow* winHndl, int iconified)
 
 static void GLFWWindowRefreshCallback(GLFWwindow* winHndl)
 {
-    auto This = static_cast<WeakRef*>(glfwGetWindowUserPointer(winHndl))->lock();
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
     if (!This)
         return;
 

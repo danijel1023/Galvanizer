@@ -13,14 +13,14 @@ void EventConfiguration::ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Init>
 }
 
 void EventConfiguration::ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Close>, std::shared_ptr<ObjectEvent> event,
-                                           GObjHNDL objHndl)
+                                           std::weak_ptr<GObj> objHndl)
 {
     event->visibility = EventVisibility::Single;
     event->objHndl = objHndl;
 }
 
 void EventConfiguration::ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Terminate>,
-                                           std::shared_ptr<ObjectEvent> event, GObjHNDL objHndl)
+                                           std::shared_ptr<ObjectEvent> event, std::weak_ptr<GObj> objHndl)
 {
     event->visibility = EventVisibility::Single;
     event->objHndl = objHndl;
@@ -44,7 +44,7 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Regis
 
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::CreateWindow>,
-                                           std::shared_ptr<WindowEvent> event, WeakRef ret,
+                                           std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> ret,
                                            IVec2 size, std::string_view name, void* share)
 {
     event->visibility = EventVisibility::Single;
@@ -55,7 +55,7 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Creat
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::DestroyWindow>,
-                                           std::shared_ptr<WindowEvent> event, WeakRef win)
+                                           std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> win)
 {
     event->visibility = EventVisibility::Single;
     event->objHndl = std::move(win);
@@ -78,7 +78,7 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Resto
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>, std::shared_ptr<WindowEvent> event,
-                                           WeakRef winHNDL, IVec2 size)
+                                           std::weak_ptr<GObj> winHNDL, IVec2 size)
 {
     event->visibility = EventVisibility::Single;
     event->objHndl = std::move(winHNDL);
@@ -93,7 +93,7 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Resiz
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,
-                                           std::shared_ptr<WindowEvent> event, WeakRef winHNDL, IVec2 pos)
+                                           std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, IVec2 pos)
 {
     event->visibility = EventVisibility::Single;
     event->objHndl = std::move(winHNDL);
@@ -147,7 +147,7 @@ void EventConfiguration::ConfigAppEvent(AppMessageTag<AppMessage::SetCursor>, st
 }
 
 void EventConfiguration::ConfigAppEvent(AppMessageTag<AppMessage::TimedEvent>, std::shared_ptr<AppEvent> event,
-                                        std::shared_ptr<Event> responseEvent, WeakRef timerReceiver,
+                                        std::shared_ptr<Event> responseEvent, std::weak_ptr<GObj> timerReceiver,
                                         std::chrono::steady_clock::time_point timeout)
 {
     event->visibility = EventVisibility::Single;

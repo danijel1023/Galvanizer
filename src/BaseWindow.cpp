@@ -6,15 +6,23 @@
 using namespace Galvanizer;
 using namespace EventConfiguration;
 
-
-GObjHNDL BaseWindow::factory(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
+namespace
 {
-    return new BaseWindow(name, parent, originFac, createdOnHeap);
+struct BaseWindow_Shared : BaseWindow
+{
+    template<typename... Args>
+    BaseWindow_Shared(Args&&... args): BaseWindow(std::forward<Args>(args)...) {}
+};
+}
+
+std::shared_ptr<GObj> BaseWindow::factory(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+{
+    return std::make_shared<BaseWindow_Shared>(name, parent, originFac);
 }
 
 
-BaseWindow::BaseWindow(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
-    : GalvanizerObject(name, parent, originFac, createdOnHeap)
+BaseWindow::BaseWindow(const std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+    : GalvanizerObject(name, parent, originFac)
 {
     const auto lockedParent = parent.lock();
 

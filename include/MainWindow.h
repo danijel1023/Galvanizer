@@ -12,7 +12,7 @@ namespace Galvanizer
 class MainWindow : public BaseWindow
 {
 public:
-    static GObjHNDL factory(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap);
+    static std::shared_ptr<GObj> factory(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac);
     ~MainWindow() override;
 
     uintptr_t Dispatcher(const std::shared_ptr<Event>& event) override;
@@ -21,7 +21,7 @@ public:
     QuadRenderer renderer;
 
 protected:
-    MainWindow(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap);
+    MainWindow(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac);
     [[nodiscard]] bool OpenGLInitialised() const { return m_openGLInit; }
 
 

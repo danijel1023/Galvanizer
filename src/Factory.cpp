@@ -15,7 +15,7 @@ Factory::Factory(std::string_view name, Factory* parent)
 }
 
 Factory::Factory(std::string_view name, std::string* rootOwner)
-    : name(name), parent(nullptr), rootOwner(rootOwner) {}
+    : name(name), rootOwner(rootOwner) {}
 
 Factory::~Factory()
 {
@@ -188,7 +188,48 @@ std::vector<std::string_view> ObjectFactories::GetFacNames(std::string_view path
     return {};
 }
 
-std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj)
+
+Factory* ObjectFactories::FindTarget(Factory* elm, std::string_view target)
+{
+    if (!Utility::ValidateKeys(target))
+    {
+        std::cout << "[ERROR] ValidateKeys failed for: \"" << target << "\"" << std::endl;
+        return nullptr;
+    }
+
+    std::vector<std::string> keys = Utility::ExtractKeys(target);
+    if (keys.empty())
+    {
+        std::cout << "[WARN]: No keys extracted for \"" << target << "\"" << std::endl;
+        return elm;
+    }
+
+
+    for (auto& key: keys)
+    {
+        bool found = false;
+        for (const auto& elmCh: elm->children)
+        {
+            if (elmCh->name != key)
+                continue;
+
+            found = true;
+            elm = elmCh;
+            break;
+        }
+
+        if (!found) // Create new element with this key
+        {
+            elm->children.push_back(new Factory(key, elm));
+            elm = elm->children.back();
+        }
+    }
+
+    return elm;
+}
+
+
+std::vector<std::shared_ptr<GObj>> ObjectFactories::Build(const std::shared_ptr<GObj>& pathObj)
 {
     if (pathObj->Closing())
         return {}; // Drop build requests if its closing
@@ -320,13 +361,14 @@ std::vector<OwningRef> ObjectFactories::Build(const OwningRef& pathObj)
 
 
     // Build the actual objects
-    std::vector<OwningRef> builtObjects;
+    std::vector<std::shared_ptr<GObj>> builtObjects;
     for (auto& facElm: factories)
     {
         if (facElm.fac && facElm.fac->ptr)
         {
             // Call facElm (pointer) aka. builder factory
-            OwningRef hndl = CreateOwningRef(facElm.fac->ptr(facElm.fac->name, pathObj, facElm.fac, true));
+
+            std::shared_ptr hndl = facElm.fac->ptr(facElm.fac->name, pathObj, facElm.fac);
 
             // Give the new obj a weak hndl to itself
             hndl->p_weakSelf = hndl;

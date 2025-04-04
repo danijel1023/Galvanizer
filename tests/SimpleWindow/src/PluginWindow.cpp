@@ -4,16 +4,25 @@
 
 using namespace Galvanizer;
 
+namespace
+{
+struct PluginWindow_Shared : PluginWindow
+{
+    template<typename... Args>
+    PluginWindow_Shared(Args&&... args): PluginWindow(std::forward<Args>(args)...) {}
+};
+}
 
-GObjHNDL PluginWindow::factory(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
+std::shared_ptr<GObj> PluginWindow::factory(std::string_view name, const std::weak_ptr<GObj>& parent,
+                                            Factory* originFac)
 {
     // Hopefully parent is not null :>
     std::cout << "PluginWindow factory as: " << parent.lock()->GetTarget() << "." << name << std::endl << std::endl;
-    return new PluginWindow(name, parent, originFac, createdOnHeap);
+    return std::make_shared<PluginWindow_Shared>(name, parent, originFac);
 }
 
-PluginWindow::PluginWindow(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
-    : MainWindow(name, parent, originFac, createdOnHeap) {}
+PluginWindow::PluginWindow(const std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+    : MainWindow(name, parent, originFac) {}
 
 PluginWindow::~PluginWindow() = default;
 

@@ -6,8 +6,6 @@
 #include <memory>
 
 #include "units.h"
-#include "GalvanizerRef.h"
-
 
 //[TODO] fix name
 //[TODO] IMPORTANT: var names cannot start with '_'
@@ -39,6 +37,9 @@ EventType() { m_type = EventID_; }
 
 namespace Galvanizer
 {
+class GalvanizerObject;
+using GObj = GalvanizerObject;
+
 class EventManager
 {
 public:
@@ -120,7 +121,7 @@ public:
     ChildPriority priority = {};
 
     std::shared_ptr<Event> responseEvent;
-    WeakRef receiver;
+    std::weak_ptr<GObj> receiver;
 
     bool ignoreChildOnSeparateThread = false;
 
@@ -147,7 +148,7 @@ struct ObjectEvent : Event
     [[nodiscard]] std::string strMessage() const override;
 
     ObjectMessage message = {};
-    GObjHNDL objHndl = nullptr;
+    std::weak_ptr<GObj> objHndl;
 };
 
 
@@ -286,7 +287,7 @@ struct WindowEvent : Event
     WindowMessage message = {};
 
     void* winHNDL = nullptr;
-    WeakRef objHndl;
+    std::weak_ptr<GObj> objHndl;
 
     IVec2 pos, size;
     std::string name;
@@ -321,7 +322,7 @@ struct AppEvent : Event
     CursorType cursorType = {};
     void* winHNDL = nullptr;
 
-    WeakRef timerReceiver;
+    std::weak_ptr<GObj> timerReceiver;
     std::chrono::steady_clock::time_point timeout = {};
 };
 }

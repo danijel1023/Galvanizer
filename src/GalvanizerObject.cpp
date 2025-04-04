@@ -9,22 +9,29 @@ using namespace Galvanizer;
 using namespace EventConfiguration;
 
 
-GObjHNDL GalvanizerObject::factory(const std::string_view name, const WeakRef& parent, Factory* originFac,
-                                   bool createdOnHeap)
+namespace
 {
-    return new GalvanizerObject(name, parent, originFac, createdOnHeap);
+struct GalvanizerObject_Shared : GalvanizerObject
+{
+    template<typename... Args>
+    GalvanizerObject_Shared(Args&&... args): GalvanizerObject(std::forward<Args>(args)...) {}
+};
 }
 
-GalvanizerObject::GalvanizerObject(const std::string_view name, const WeakRef& parent, Factory* originFac,
-                                   bool createdOnHeap)
-    : c_createdOnHeap(createdOnHeap), p_parent(parent), pc_internalName(name), p_displayName(name),
+std::shared_ptr<GObj> GalvanizerObject::factory(std::string_view name, const std::weak_ptr<GObj>& parent,
+                                                Factory* originFac)
+{
+    return std::make_shared<GalvanizerObject_Shared>(name, parent, originFac);
+}
+
+GalvanizerObject::GalvanizerObject(const std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+    : p_parent(parent), pc_internalName(name), p_displayName(name),
       m_originFac(originFac)
 {
     //std::cout << "[DEBUG] " << pc_internalName << " created on thread-id " << std::this_thread::get_id() << std::endl;
 
-    const OwningRef lockedParent = parent.lock();
-    if (lockedParent.get())
-        p_eventLoopRef = lockedParent.get()->p_eventLoopRef;
+    if (const std::shared_ptr<GObj> lockedParent = parent.lock())
+        p_eventLoopRef = lockedParent->p_eventLoopRef;
 
     std::cout << "[DEBUG] Constructing on thread-id " << std::this_thread::get_id() << ", " << p_displayName <<
             std::endl;
@@ -76,10 +83,12 @@ uintptr_t GalvanizerObject::Dispatcher(const std::shared_ptr<Event>& event)
 
         if (objectEvent.message == ObjectMessage::Close)
         {
-            GObjHNDL target = objectEvent.objHndl;
+            std::shared_ptr target = objectEvent.objHndl.lock();
+            if (!target)
+                return -1;
 
             // The parent
-            if (target->p_parent.lock() == this)
+            if (target->p_parent.lock() == p_weakSelf.lock())
             {
                 if (*target->p_eventLoopRef != *p_eventLoopRef)
                 {
@@ -126,7 +135,7 @@ uintptr_t GalvanizerObject::Dispatcher(const std::shared_ptr<Event>& event)
 
                     //std::cout << "Killing \"" << ch->GetTarget() << "\" thread-id: " <<
                     //        std::this_thread::get_id() << std::endl;
-                    ch.DropOwnership();
+                    ch.reset();
                 }
                 p_children.clear();
 
@@ -134,7 +143,7 @@ uintptr_t GalvanizerObject::Dispatcher(const std::shared_ptr<Event>& event)
                 Callback(event);
 
                 // Edge case on Application
-                if (this == &Application::get())
+                if (p_weakSelf.lock() == Application::get())
                     Callback(EventConfiguration::CreateObjectEvent<ObjectMessage::Terminate>(target));
             }
 
@@ -207,7 +216,7 @@ uintptr_t GalvanizerObject::Callback(const std::shared_ptr<Event>& event)
 }
 
 
-WeakRef GalvanizerObject::FindChild(std::string_view name)
+std::weak_ptr<GObj> GalvanizerObject::FindChild(std::string_view name)
 {
     for (const auto& win: p_children)
     {

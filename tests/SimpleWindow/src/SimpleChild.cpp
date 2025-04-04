@@ -6,14 +6,22 @@
 
 using namespace Galvanizer;
 
-
-GObjHNDL SimpleChild::factory(std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
+namespace
 {
-    return new SimpleChild(name, parent, originFac, createdOnHeap);
+struct SimpleChild_Shared : SimpleChild
+{
+    template<typename... Args>
+    SimpleChild_Shared(Args&&... args): SimpleChild(std::forward<Args>(args)...) {}
+};
 }
 
-SimpleChild::SimpleChild(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
-    : BaseWindow(name, parent, originFac, createdOnHeap) {}
+std::shared_ptr<GObj> SimpleChild::factory(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+{
+    return std::make_shared<SimpleChild_Shared>(name, parent, originFac);
+}
+
+SimpleChild::SimpleChild(const std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+    : BaseWindow(name, parent, originFac) {}
 
 
 SimpleChild::~SimpleChild() = default;

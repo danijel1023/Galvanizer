@@ -11,8 +11,8 @@ template<ObjectMessage msg>
 struct ObjectMessageTag {};
 
 void ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Init> tag,       std::shared_ptr<ObjectEvent> event);
-void ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Close> tag,      std::shared_ptr<ObjectEvent> event, GObjHNDL objHndl);
-void ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Terminate> tag,  std::shared_ptr<ObjectEvent> event, GObjHNDL objHndl);
+void ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Close> tag,      std::shared_ptr<ObjectEvent> event, std::weak_ptr<GObj> objHndl);
+void ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Terminate> tag,  std::shared_ptr<ObjectEvent> event, std::weak_ptr<GObj> objHndl);
 void ConfigObjectEvent(ObjectMessageTag<ObjectMessage::Empty> tag,      std::shared_ptr<ObjectEvent> event);
 
 template<ObjectMessage msg, typename... Args>
@@ -29,15 +29,15 @@ template<WindowMessage msg>
 struct WindowMessageTag {};
 
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::RegisterHNDL>,  std::shared_ptr<WindowEvent> event, void* winHNDL);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::CreateWindow>,  std::shared_ptr<WindowEvent> event, WeakRef ret, IVec2 size, std::string_view name, void* share);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::DestroyWindow>, std::shared_ptr<WindowEvent> event, WeakRef winHNDL);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::CreateWindow>,  std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> ret, IVec2 size, std::string_view name, void* share);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::DestroyWindow>, std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL);
 
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::Maximise>,        std::shared_ptr<WindowEvent> event);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::Iconify>,         std::shared_ptr<WindowEvent> event);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::Restore>,         std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>,          std::shared_ptr<WindowEvent> event, WeakRef winHNDL, IVec2 size);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>,          std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, IVec2 size);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::ResizeRequest>,   std::shared_ptr<WindowEvent> event, IVec2 size);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,        std::shared_ptr<WindowEvent> event, WeakRef winHNDL, IVec2 pos);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,        std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, IVec2 pos);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::PositionRequest>, std::shared_ptr<WindowEvent> event, IVec2 pos);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::GainFocus>,       std::shared_ptr<WindowEvent> event);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::LoseFocus>,       std::shared_ptr<WindowEvent> event);
@@ -59,7 +59,7 @@ template<AppMessage msg>
 struct AppMessageTag {};
 
 void ConfigAppEvent(AppMessageTag<AppMessage::SetCursor>,   std::shared_ptr<AppEvent> event, CursorType cursorType, void* winHNDL);
-void ConfigAppEvent(AppMessageTag<AppMessage::TimedEvent>,  std::shared_ptr<AppEvent> event, std::shared_ptr<Event> responseEvent, WeakRef timerReceiver,
+void ConfigAppEvent(AppMessageTag<AppMessage::TimedEvent>,  std::shared_ptr<AppEvent> event, std::shared_ptr<Event> responseEvent, std::weak_ptr<GObj> timerReceiver,
                                                                                              std::chrono::steady_clock::time_point timeout);
 
 template<AppMessage msg, typename... Args>

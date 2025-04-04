@@ -12,14 +12,23 @@
 using namespace Galvanizer;
 using namespace EventConfiguration;
 
-GObjHNDL SimpleWindow::factory(const std::string_view name, const WeakRef& parent, Factory* originFac,
-                               bool createdOnHeap)
+namespace
 {
-    return new SimpleWindow(name, parent, originFac, createdOnHeap);
+struct SimpleWindow_Shared : SimpleWindow
+{
+    template<typename... Args>
+    SimpleWindow_Shared(Args&&... args): SimpleWindow(std::forward<Args>(args)...) {}
+};
 }
 
-SimpleWindow::SimpleWindow(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
-    : MainWindow(name, parent, originFac, createdOnHeap) {}
+std::shared_ptr<GObj> SimpleWindow::factory(const std::string_view name, const std::weak_ptr<GObj>& parent,
+                                            Factory* originFac)
+{
+    return std::make_shared<SimpleWindow_Shared>(name, parent, originFac);
+}
+
+SimpleWindow::SimpleWindow(const std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+    : MainWindow(name, parent, originFac) {}
 
 SimpleWindow::~SimpleWindow() = default;
 
@@ -61,7 +70,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
             m_tex = std::make_shared<QuadTex>();
             m_tex->data = Utility::RenderAbstraction::LoadTexture(
-                "../../opengl-testing.png", &m_tex->specs);
+                "../../../../opengl-testing.png", &m_tex->specs);
             renderer.AddTexture(m_tex);
 
             m_texQuad.pos = {250, 200};
@@ -80,8 +89,8 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             std::cout << "====================================" << std::endl;
             std::cout << "Posting Close signal to application. thread-id: " << std::this_thread::get_id() << std::endl;
 
-            auto& app = Application::get();
-            app.PostEvent(CreateObjectEvent<ObjectMessage::Close>(&app));
+            auto app = Application::get();
+            app->PostEvent(CreateObjectEvent<ObjectMessage::Close>(app));
 
             return 0;
         }
@@ -132,7 +141,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
                 // Start from 2 bc when the app starts up, the cursor is already 1 (Arrow)
                 static auto cursorType = static_cast<CursorType>(2);
-                Application::get().PostEvent(
+                Application::get()->PostEvent(
                     EventConfiguration::CreateAppEvent<AppMessage::SetCursor>(cursorType, p_winHNDL));
 
                 // Abomination, but it werks

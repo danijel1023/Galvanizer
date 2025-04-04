@@ -7,8 +7,8 @@
 using namespace Galvanizer;
 using namespace EventConfiguration;
 
-EventLoop::EventLoop(IBlockingObject* BO, GObjHNDL dispatchRef, bool async)
-    : m_queue(BO), m_async(async), m_dispatchRef(dispatchRef) {}
+EventLoop::EventLoop(IBlockingObject* BO, bool async)
+    : m_queue(BO), m_async(async) {}
 
 EventLoop::~EventLoop()
 {
@@ -18,20 +18,12 @@ EventLoop::~EventLoop()
 void EventLoop::Start()
 {
     auto empty = CreateELEvent<ELMessage::Run>();
-    PostEvent(empty, WeakRef());
+    PostEvent(empty, std::weak_ptr<GObj>());
 
     if (!m_async)
-    {
-        //std::cout << "[INFO] Running loop for \"" << m_dispatchRef->GetTarget() << "\" in sync-mode: " <<
-        //        std::this_thread::get_id() << std::endl;
         Loop();
-    }
     else
-    {
         m_workerThread = std::thread(&EventLoop::Loop, this);
-        //std::cout << "[INFO] Running loop for \"" << m_dispatchRef->GetTarget() << "\" in async-mode: " <<
-        //        m_workerThread.get_id() << std::endl;
-    }
 }
 
 void EventLoop::Stop()
@@ -48,7 +40,7 @@ void EventLoop::Stop()
     if (m_running)
     {
         m_running = false;
-        PostEvent(CreateELEvent<ELMessage::Stop>(), WeakRef());
+        PostEvent(CreateELEvent<ELMessage::Stop>(), std::weak_ptr<GObj>());
 
         if (m_async)
         {
@@ -62,7 +54,7 @@ void EventLoop::Stop()
 }
 
 
-void EventLoop::PostEvent(const std::shared_ptr<Event>& event, const WeakRef& receiver)
+void EventLoop::PostEvent(const std::shared_ptr<Event>& event, const std::weak_ptr<GObj>& receiver)
 {
     event->receiver = receiver;
     m_queue.PostEvent(event);
@@ -155,7 +147,7 @@ void EventLoopRef::Stop()
     set(nullptr);
 }
 
-void EventLoopRef::PostEvent(const std::shared_ptr<Event>& event, WeakRef receiver)
+void EventLoopRef::PostEvent(const std::shared_ptr<Event>& event, std::weak_ptr<GObj> receiver)
 {
     std::lock_guard stop_lck(m_stopMutex);
     if (!m_stopping)

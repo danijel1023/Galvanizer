@@ -11,17 +11,24 @@
 
 using namespace Galvanizer;
 using namespace EventConfiguration;
-using namespace std::chrono;
-using namespace std::chrono_literals;
 
 
-GObjHNDL MainWindow::factory(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
+namespace
 {
-    return new MainWindow(name, parent, originFac, createdOnHeap);
+struct MainWindow_Shared : MainWindow
+{
+    template<typename... Args>
+    MainWindow_Shared(Args&&... args): MainWindow(std::forward<Args>(args)...) {}
+};
 }
 
-MainWindow::MainWindow(const std::string_view name, const WeakRef& parent, Factory* originFac, bool createdOnHeap)
-    : BaseWindow(name, parent, originFac, createdOnHeap), p_eventLoop(&m_BO, this), p_mainELRef(&p_eventLoop)
+std::shared_ptr<GObj> MainWindow::factory(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+{
+    return std::make_shared<MainWindow_Shared>(name, parent, originFac);
+}
+
+MainWindow::MainWindow(const std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac)
+    : BaseWindow(name, parent, originFac), p_eventLoop(&m_BO, true), p_mainELRef(&p_eventLoop)
 {
     // Create new ELRef
     p_eventLoopRef = &p_mainELRef;
@@ -38,7 +45,7 @@ MainWindow::MainWindow(const std::string_view name, const WeakRef& parent, Facto
 MainWindow::~MainWindow()
 {
     auto event = CreateWindowEvent<WindowMessage::DestroyWindow>(p_weakSelf);
-    Application::get().PostEvent(event);
+    Application::get()->PostEvent(event);
 }
 
 
@@ -73,7 +80,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
             thread_local std::string name = GetTarget();
             auto createWin = CreateWindowEvent<WindowMessage::CreateWindow>(p_weakSelf, p_size,
                                                                             name.c_str(), p_parentMainWindow);
-            Application::get().PostEvent(createWin);
+            Application::get()->PostEvent(createWin);
             break;
         }
 
@@ -88,7 +95,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
                 glfwSetWindowUserPointer(static_cast<GLFWwindow*>(p_winHNDL), nullptr);
 
                 auto event = CreateWindowEvent<WindowMessage::DestroyWindow>(p_weakSelf);
-                Application::get().PostEvent(event);
+                Application::get()->PostEvent(event);
             }
 
             break;
@@ -140,13 +147,13 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
 
         case WindowMessage::Close:
         {
-            p_parent.lock()->PostEvent(CreateObjectEvent<ObjectMessage::Close>(this));
+            p_parent.lock()->PostEvent(CreateObjectEvent<ObjectMessage::Close>(p_weakSelf));
             break;
         }
 
         case WindowMessage::ResizeRequest:
         {
-            Application::get().PostEvent(CreateWindowEvent<WindowMessage::Resize>(p_weakSelf, winEvent.size));
+            Application::get()->PostEvent(CreateWindowEvent<WindowMessage::Resize>(p_weakSelf, winEvent.size));
             return 0;
         }
 
