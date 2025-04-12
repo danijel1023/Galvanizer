@@ -5,6 +5,44 @@ namespace Galvanizer
 struct Vec2
 {
     float x = 0, y = 0;
+
+    template<class T>
+    Vec2 operator+(const T& second) const
+    {
+        return Vec2(x + second.x, y + second.y);
+    }
+
+    Vec2 operator+(const float& second) const
+    {
+        return Vec2(x + second, y + second);
+    }
+
+    Vec2 operator*(const float& second) const
+    {
+        return Vec2(x * second, y * second);
+    }
+
+    template<class T>
+    Vec2 operator-(const T& second) const
+    {
+        return Vec2(x - second.x, y - second.y);
+    }
+
+    template<class T>
+    Vec2 operator+=(const T& second)
+    {
+        x += second.x;
+        y += second.y;
+        return *this;
+    }
+
+    template<class T>
+    Vec2 operator-=(const T& second)
+    {
+        x -= second.x;
+        y -= second.y;
+        return *this;
+    }
 };
 
 struct Vec3

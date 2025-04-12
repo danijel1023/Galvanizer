@@ -29,7 +29,7 @@ protected:
 
 protected:
     WinHNDL p_mainWindow = nullptr; // TODO make this also smart pointer... maybe?
-    IVec2 p_size, p_pos;
+    Vec2 p_size, p_pos;
     bool p_overlay = false;
 };
 }

@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 
+#include "units.h"
+#include "Application.h"
 
 namespace Galvanizer::Utility
 {
@@ -27,5 +29,30 @@ void printList(const T& vec)
     }
 
     std::cout << "]";
+}
+
+
+template<class T>
+static T PlatformScaleDown(T vec, Vec2 scale)
+{
+    if (Application::GetPlatform() == Platform::X11 ||
+        Application::GetPlatform() == Platform::Windows)
+    {
+        return T(vec.x / scale.x, vec.y / scale.y);
+    }
+
+    return vec;
+}
+
+template<class T>
+static T PlatformScaleUp(T vec, Vec2 scale)
+{
+    if (Application::GetPlatform() == Platform::X11 ||
+        Application::GetPlatform() == Platform::Windows)
+    {
+        return T(vec.x * scale.x, vec.y * scale.y);
+    }
+
+    return vec;
 }
 }

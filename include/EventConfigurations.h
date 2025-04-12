@@ -29,20 +29,22 @@ template<WindowMessage msg>
 struct WindowMessageTag {};
 
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::RegisterHNDL>,  std::shared_ptr<WindowEvent> event, void* winHNDL);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::CreateWindow>,  std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> ret, IVec2 size, std::string_view name, void* share);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::CreateWindow>,  std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> ret, Vec2 size, std::string_view name, void* share);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::DestroyWindow>, std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL);
 
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::Maximise>,        std::shared_ptr<WindowEvent> event);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::Iconify>,         std::shared_ptr<WindowEvent> event);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::Restore>,         std::shared_ptr<WindowEvent> event);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>,          std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, IVec2 size);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::ResizeRequest>,   std::shared_ptr<WindowEvent> event, IVec2 size);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,        std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, IVec2 pos);
-void ConfigWindowEvent(WindowMessageTag<WindowMessage::PositionRequest>, std::shared_ptr<WindowEvent> event, IVec2 pos);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::FBResize>,        std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, Vec2 size);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>,          std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, Vec2 size);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::ResizeRequest>,   std::shared_ptr<WindowEvent> event, Vec2 size);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,        std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, Vec2 pos);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::PositionRequest>, std::shared_ptr<WindowEvent> event, Vec2 pos);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::GainFocus>,       std::shared_ptr<WindowEvent> event);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::LoseFocus>,       std::shared_ptr<WindowEvent> event);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::Close>,           std::shared_ptr<WindowEvent> event);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::Refresh>,         std::shared_ptr<WindowEvent> event);
+void ConfigWindowEvent(WindowMessageTag<WindowMessage::Scale>,           std::shared_ptr<WindowEvent> event, Vec2 scale);
 void ConfigWindowEvent(WindowMessageTag<WindowMessage::RenderRequest>,   std::shared_ptr<WindowEvent> event);
 
 template<WindowMessage msg, typename... Args>
@@ -91,11 +93,11 @@ std::shared_ptr<ELEvent> CreateELEvent(Args&&... args)
 template<MouseMessage msg>
 struct MouseMessageTag {};
 
-void ConfigMouseEvent(MouseMessageTag<MouseMessage::Button>,    std::shared_ptr<MouseEvent> event, IVec2 pos, MouseButton mb, MouseAction ma);
-void ConfigMouseEvent(MouseMessageTag<MouseMessage::Enter>,     std::shared_ptr<MouseEvent> event, IVec2 pos);
-void ConfigMouseEvent(MouseMessageTag<MouseMessage::Leave>,     std::shared_ptr<MouseEvent> event, IVec2 pos);
-void ConfigMouseEvent(MouseMessageTag<MouseMessage::Move>,      std::shared_ptr<MouseEvent> event, IVec2 pos);
-void ConfigMouseEvent(MouseMessageTag<MouseMessage::Scroll>,    std::shared_ptr<MouseEvent> event, IVec2 pos, DVec2 offset);
+void ConfigMouseEvent(MouseMessageTag<MouseMessage::Button>,    std::shared_ptr<MouseEvent> event, Vec2 pos, MouseButton mb, MouseAction ma);
+void ConfigMouseEvent(MouseMessageTag<MouseMessage::Enter>,     std::shared_ptr<MouseEvent> event, Vec2 pos);
+void ConfigMouseEvent(MouseMessageTag<MouseMessage::Leave>,     std::shared_ptr<MouseEvent> event, Vec2 pos);
+void ConfigMouseEvent(MouseMessageTag<MouseMessage::Move>,      std::shared_ptr<MouseEvent> event, Vec2 pos);
+void ConfigMouseEvent(MouseMessageTag<MouseMessage::Scroll>,    std::shared_ptr<MouseEvent> event, Vec2 pos, Vec2 offset);
 
 template<MouseMessage msg, typename... Args>
 std::shared_ptr<MouseEvent> CreateMouseEvent(Args&&... args)

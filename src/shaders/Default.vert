@@ -1,16 +1,17 @@
 #version 460 core
 
 layout (location = 0) in int cpu_type;
-layout (location = 1) in ivec2 cpu_pos;
+layout (location = 1) in vec2 cpu_pos;
 layout (location = 2) in vec4 cpu_color;
 layout (location = 3) in vec2 cpu_rotCenter;
 layout (location = 4) in vec2 cpu_texCoords;
 layout (location = 5) in int cpu_texSlot;
 layout (location = 6) in float cpu_rotation;
 layout (location = 7) in float cpu_innerDiameter;
-layout (location = 8) in ivec4 cpu_quadPosSize;
+layout (location = 8) in vec4 cpu_quadPosSize;
 
-uniform ivec2 u_winSize;
+uniform vec2 u_winSize;
+uniform vec2 u_scale;
 
 
 
@@ -24,8 +25,9 @@ out vec2 vert_uv;
 
 void main()
 {
-    vec2 pos = vec2(cpu_pos);
     float rad = radians(cpu_rotation);
+    vec2 pos = vec2(cpu_pos.x * u_scale.x, cpu_pos.y * u_scale.y);
+
 
     vert_uv = (pos - cpu_quadPosSize.xy) / cpu_quadPosSize.zw * 2.0 - 1.0;
 

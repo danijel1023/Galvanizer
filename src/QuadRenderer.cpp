@@ -1,8 +1,8 @@
 #include "QuadRenderer.h"
 #include "renderAbstraction/Renderer.h"
+#include "Utility.h"
 
 #include <iostream>
-#include <thread>
 
 #include "glad/glad.h"
 
@@ -55,14 +55,14 @@ void QuadRenderer::Init(std::string_view vertSrc, std::string_view fragSrc)
 
     mesh.vertexSetup.SetVertexLayout({
         {m_posBuff, VarType::Int, 0},
-        {m_posBuff, VarType::IVec2, 1},
+        {m_posBuff, VarType::Vec2, 1},
         {m_posBuff, VarType::Vec4, 2},
         {m_posBuff, VarType::Vec2, 3},
         {m_posBuff, VarType::Vec2, 4},
         {m_posBuff, VarType::Int, 5},
         {m_posBuff, VarType::Float, 6},
         {m_posBuff, VarType::Float, 7},
-        {m_posBuff, VarType::IVec4, 8},
+        {m_posBuff, VarType::Vec4, 8},
     });
 
     size_t indexBuff = mesh.CreateIndexBuffer(sizeof(indices), indices, RenderAbstraction::BufferUsage::Dynamic);
@@ -102,14 +102,8 @@ void QuadRenderer::Render()
                 m_obj.technique.UseTexture(tex->gpuTex, "u_textures[0]");
                 texSlot = 0;
 
-                IVec2 texSize = tex->specs.size;
-                nTexPos = {
-                    quad.texPos.x / static_cast<float>(texSize.x), quad.texPos.y / static_cast<float>(texSize.y)
-                };
-
-                nTexSize = {
-                    quad.texSize.x / static_cast<float>(texSize.x), quad.texSize.y / static_cast<float>(texSize.y)
-                };
+                nTexPos = {quad.texPos.x / tex->specs.size.x, quad.texPos.y / tex->specs.size.y};
+                nTexSize = {quad.texSize.x / tex->specs.size.x, quad.texSize.y / tex->specs.size.y};
             }
         }
 
@@ -203,16 +197,28 @@ void QuadRenderer::AddQuad(const Quad& quad)
 }
 
 
-void QuadRenderer::SetSpace(const IVec2 absPos, const IVec2 size)
+void QuadRenderer::SetSpace(Vec2 absPos, Vec2 size)
 {
     const auto prog = m_obj.technique.program.lock();
+
+    if (!prog->SetUniformF("u_scale", m_scale.x, m_scale.y))
+        std::cout << "[ERROR] Couldn't set u_scale uniform!" << std::endl;
+
+    absPos = Vec2(absPos.x * m_scale.x, absPos.y * m_scale.y);
+    size = Vec2(size.x * m_scale.x, size.y * m_scale.y);
 
     glViewport(absPos.x, absPos.y, size.x, size.y);
     glScissor(absPos.x, absPos.y, size.x, size.y);
 
-    if (!prog->SetUniformI("u_winSize", size.x, size.y))
+    if (!prog->SetUniformF("u_winSize", size.x, size.y))
         std::cout << "[ERROR] Couldn't set u_winSize uniform!" << std::endl;
+
 
     m_pos = absPos;
     m_size = size;
+}
+
+void QuadRenderer::SetScale(Vec2 scale)
+{
+    m_scale = scale;
 }

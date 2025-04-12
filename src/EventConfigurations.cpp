@@ -45,7 +45,7 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Regis
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::CreateWindow>,
                                            std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> ret,
-                                           IVec2 size, std::string_view name, void* share)
+                                           Vec2 size, std::string_view name, void* share)
 {
     event->visibility = EventVisibility::Single;
     event->size = size;
@@ -77,8 +77,16 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Resto
     event->visibility = EventVisibility::Single;
 }
 
+void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::FBResize>,
+                                           std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, Vec2 size)
+{
+    event->visibility = EventVisibility::Single;
+    event->objHndl = std::move(winHNDL);
+    event->size = size;
+}
+
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Resize>, std::shared_ptr<WindowEvent> event,
-                                           std::weak_ptr<GObj> winHNDL, IVec2 size)
+                                           std::weak_ptr<GObj> winHNDL, Vec2 size)
 {
     event->visibility = EventVisibility::Single;
     event->objHndl = std::move(winHNDL);
@@ -86,14 +94,14 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Resiz
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::ResizeRequest>,
-                                           std::shared_ptr<WindowEvent> event, IVec2 size)
+                                           std::shared_ptr<WindowEvent> event, Vec2 size)
 {
     event->visibility = EventVisibility::Single;
     event->size = size;
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Position>,
-                                           std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, IVec2 pos)
+                                           std::shared_ptr<WindowEvent> event, std::weak_ptr<GObj> winHNDL, Vec2 pos)
 {
     event->visibility = EventVisibility::Single;
     event->objHndl = std::move(winHNDL);
@@ -101,7 +109,7 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Posit
 }
 
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::PositionRequest>,
-                                           std::shared_ptr<WindowEvent> event, IVec2 pos)
+                                           std::shared_ptr<WindowEvent> event, Vec2 pos)
 {
     event->visibility = EventVisibility::Single;
     event->pos = pos;
@@ -129,6 +137,14 @@ void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Refre
     event->visibility = EventVisibility::Single;
 }
 
+void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::Scale>, std::shared_ptr<WindowEvent> event,
+                                           Vec2 scale)
+{
+    event->visibility = EventVisibility::Root;
+    event->priority = ChildPriority::Last;
+    event->scale = scale;
+}
+
 void EventConfiguration::ConfigWindowEvent(WindowMessageTag<WindowMessage::RenderRequest>,
                                            std::shared_ptr<WindowEvent> event)
 {
@@ -151,9 +167,9 @@ void EventConfiguration::ConfigAppEvent(AppMessageTag<AppMessage::TimedEvent>, s
                                         std::chrono::steady_clock::time_point timeout)
 {
     event->visibility = EventVisibility::Single;
-    event->responseEvent = responseEvent;
+    event->responseEvent = std::move(responseEvent);
     event->timeout = timeout;
-    event->timerReceiver = timerReceiver;
+    event->timerReceiver = std::move(timerReceiver);
 }
 
 
@@ -177,7 +193,7 @@ void EventConfiguration::ConfigELEvent(ELMessageTag<ELMessage::Stop>, std::share
 // Mouse
 
 void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Button>, std::shared_ptr<MouseEvent> event,
-                                          IVec2 pos, MouseButton mb, MouseAction ma)
+                                          Vec2 pos, MouseButton mb, MouseAction ma)
 {
     event->visibility = EventVisibility::Single;
     event->pos = pos;
@@ -186,28 +202,28 @@ void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Button>,
 }
 
 void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Enter>, std::shared_ptr<MouseEvent> event,
-                                          IVec2 pos)
+                                          Vec2 pos)
 {
     event->visibility = EventVisibility::Single;
     event->pos = pos;
 }
 
 void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Leave>, std::shared_ptr<MouseEvent> event,
-                                          IVec2 pos)
+                                          Vec2 pos)
 {
     event->visibility = EventVisibility::Single;
     event->pos = pos;
 }
 
 void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Move>, std::shared_ptr<MouseEvent> event,
-                                          IVec2 pos)
+                                          Vec2 pos)
 {
     event->visibility = EventVisibility::Single;
     event->pos = pos;
 }
 
 void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Scroll>, std::shared_ptr<MouseEvent> event,
-                                          IVec2 pos, DVec2 offset)
+                                          Vec2 pos, Vec2 offset)
 {
     event->visibility = EventVisibility::Single;
     event->pos = pos;

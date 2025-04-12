@@ -20,6 +20,6 @@ protected:
     SimpleWindow(std::string_view name, const std::weak_ptr<Galvanizer::GObj>& parent, Galvanizer::Factory* originFac);
 
 private:
-    Galvanizer::Quad m_bkg, m_circle, m_texQuad, m_texCircle;
+    Galvanizer::Quad m_bkg, m_q0, m_q1, m_q2, m_q3;
     std::shared_ptr<Galvanizer::QuadTex> m_tex;
 };

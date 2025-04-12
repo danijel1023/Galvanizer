@@ -21,7 +21,7 @@ enum class TextureFiltering
 struct TextureSpecs
 {
     int channels = 0;
-    IVec2 size;
+    Vec2 size;
 
     TextureWrap horizontal = TextureWrap::Repeat;
     TextureWrap vertical = TextureWrap::Repeat;

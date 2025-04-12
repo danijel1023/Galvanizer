@@ -255,8 +255,7 @@ struct MouseEvent : Event
     MouseButton button = {};
     MouseAction action = {};
 
-    DVec2 scrollOffset;
-    IVec2 pos;
+    Vec2 pos, scrollOffset;
 
     bool modAlt = false, modCtrl = false, modShift = false, modSuper = false, modCaps = false, modNum = false;
 };
@@ -268,8 +267,9 @@ enum class WindowMessage
 
     Maximise, Iconify, Restore,
     Resize, ResizeRequest, Position, PositionRequest,
+    FBResize, FBResizeRequest,
     GainFocus, LoseFocus,
-    Close, Refresh,
+    Close, Refresh, Scale,
 
     RenderInit, RenderExit,
     Render, RenderRequest,
@@ -289,10 +289,10 @@ struct WindowEvent : Event
     void* winHNDL = nullptr;
     std::weak_ptr<GObj> objHndl;
 
-    IVec2 pos, size;
+    Vec2 pos, size;
+    Vec2 scale;
     std::string name;
     void* share = nullptr;
-    bool renderCorrection = false;
 };
 
 

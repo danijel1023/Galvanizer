@@ -103,7 +103,9 @@ uint8_t* Galvanizer::Utility::RenderAbstraction::LoadTexture(const std::filesyst
 {
     stbi_set_flip_vertically_on_load(true);
 
-    auto data = stbi_load(path.c_str(), &specs->size.x, &specs->size.y, &specs->channels, 0);
+    int x, y;
+    auto data = stbi_load(path.c_str(), &x, &y, &specs->channels, 0);
+    specs->size = Vec2(x, y);
 
     if (!data)
         std::cout << "[ERROR] Failed to load texture on path: " << path << std::endl;

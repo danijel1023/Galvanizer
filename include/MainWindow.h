@@ -18,6 +18,8 @@ public:
     uintptr_t Dispatcher(const std::shared_ptr<Event>& event) override;
     uintptr_t Callback(const std::shared_ptr<Event>& event) override;
 
+    Vec2 GetScale() const { return m_scale; }
+
     QuadRenderer renderer;
 
 protected:
@@ -40,6 +42,8 @@ private:
     std::atomic_bool m_renderRunning = false;
     int m_renderRequests = 0;
     std::binary_semaphore m_renderSemaphore = std::binary_semaphore(0);
+
+    Vec2 m_scale = Vec2(1.0, 1.0);
 
 private:
     void RenderLoop();

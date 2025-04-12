@@ -47,7 +47,8 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         {
         case ObjectMessage::Init:
         {
-            p_size = {854, 480};
+            //p_size = {854, 480};
+            p_size = {300, 300};
 
             auto& OF = ObjectFactories::GetInstance();
             OF.Get(GetTarget() + ".org")->ptr = &SimpleChild::factory;
@@ -61,23 +62,29 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             m_bkg.color = {1.0, 79.0 / 255, 64.0 / 255, 1.0};
             m_bkg.size = p_size;
 
+            Vec4 quadColor = {0.7, 0.7, 0.7, 1.0};
+            m_q0.color = quadColor;
+            m_q1.color = quadColor;
+            m_q2.color = quadColor;
+            m_q3.color = quadColor;
 
-            //m_texQuad, m_texCircle
-            m_circle.color = {0.0 / 255, 170.0 / 255, 0.0 / 255, 1.0};
-            m_circle.pos = {250, 40};
-            m_circle.size = {100, 100};
-            m_circle.type = QuadType::Circle;
+            m_q0.pos = {0, 0};
+            m_q1.pos = {200, 0};
+            m_q2.pos = {200, 200};
+            m_q3.pos = {0, 200};
+
+            m_q0.size = {100, 100};
+            m_q1.size = {100, 100};
+            m_q2.size = {100, 100};
+            m_q3.size = {100, 100};
 
             m_tex = std::make_shared<QuadTex>();
-            m_tex->data = Utility::RenderAbstraction::LoadTexture(
-                "../../../../opengl-testing.png", &m_tex->specs);
-            renderer.AddTexture(m_tex);
+            m_tex->data = Utility::RenderAbstraction::LoadTexture("../../../../opengl-testing.png", &m_tex->specs);
+            m_q0.texture = m_tex;
+            m_q0.texPos = {0, 0};
+            m_q0.texSize = m_tex->specs.size;
 
-            m_texQuad.pos = {250, 200};
-            m_texQuad.size = {100, 100};
-            m_texQuad.type = QuadType::Rectangle;
-            m_texQuad.texSize = m_tex->specs.size;
-            m_texQuad.texture = m_tex;
+            renderer.AddTexture(m_tex);
 
             break;
         }
@@ -109,8 +116,15 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         case MouseMessage::Button:
         {
             if (mouseEvent.action == MouseAction::Press && mouseEvent.button == MouseButton::L)
-                PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::ResizeRequest>(IVec2(300, 300)));
+                PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::ResizeRequest>(Vec2(300, 300)));
 
+            break;
+        }
+
+        case MouseMessage::Move:
+        {
+            std::cout << "[DEBUG] Mouse position: [" << mouseEvent.pos.x << ", " << mouseEvent.pos.y << "]" <<
+                    std::endl;
             return 0;
         }
 
@@ -127,16 +141,12 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         {
         case KeyMessage::Key:
         {
-            if (keyEvent.action == KeyAction::Repeat)
-                break;
-
-
             if (keyEvent.button < KeyButton::LowerBound)
                 std::cout << "Key: " << static_cast<char>(keyEvent.button) << std::endl;
 
             else if (keyEvent.button == KeyButton::Right)
             {
-                if (keyEvent.action == KeyAction::Release)
+                if (keyEvent.action == KeyAction::Release || keyEvent.action == KeyAction::Repeat)
                     break;
 
                 // Start from 2 bc when the app starts up, the cursor is already 1 (Arrow)
@@ -151,6 +161,23 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
                 if (cursorType > static_cast<CursorType>(10))
                     cursorType = static_cast<CursorType>(1);
             }
+
+            else if (keyEvent.button == KeyButton::Up)
+            {
+                if (keyEvent.action == KeyAction::Release)
+                    break;
+
+                PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
+            }
+
+            else if (keyEvent.button == KeyButton::Down)
+            {
+                if (keyEvent.action == KeyAction::Release)
+                    break;
+
+                PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
+            }
+
             break;
         }
 
@@ -163,6 +190,8 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         default:
             break;
         }
+
+        return 0;
     }
 
     else if (event->IsType<WindowEvent>())
@@ -173,11 +202,16 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         {
         case WindowMessage::Render:
         {
-            p_mainWindow->renderer.SetSpace(winEvent.pos + p_pos, p_size);
+            Vec2 pos = winEvent.pos + p_pos;
+            p_mainWindow->renderer.SetSpace(pos, p_size);
+
+            std::cout << "[DEBUG - render]: m_bkg = [" << m_bkg.size.x << ", " << m_bkg.size.y << "]" << std::endl;
 
             renderer.AddQuad(m_bkg);
-            renderer.AddQuad(m_circle);
-            renderer.AddQuad(m_texQuad);
+            renderer.AddQuad(m_q0);
+            renderer.AddQuad(m_q1);
+            renderer.AddQuad(m_q2);
+            renderer.AddQuad(m_q3);
             renderer.Render();
 
             break;
@@ -187,6 +221,15 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         {
             MainWindow::Callback(event);
             m_bkg.size = p_size;
+
+            return 0;
+        }
+
+
+        case WindowMessage::Scale:
+        {
+            MainWindow::Callback(event);
+            //std::cout << "[DEBUG] window scale: [" << winEvent.scale.x << ", " << winEvent.scale.y << "]" << std::endl;
 
             return 0;
         }

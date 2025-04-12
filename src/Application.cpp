@@ -69,6 +69,33 @@ Application::Application()
     m_cursors[static_cast<int>(CursorType::ResizeTRBL) - 1] = glfwCreateStandardCursor(GLFW_RESIZE_NESW_CURSOR);
     m_cursors[static_cast<int>(CursorType::ResizeAll) - 1] = glfwCreateStandardCursor(GLFW_RESIZE_ALL_CURSOR);
     m_cursors[static_cast<int>(CursorType::NotAllowed) - 1] = glfwCreateStandardCursor(GLFW_NOT_ALLOWED_CURSOR);
+
+    switch (glfwGetPlatform())
+    {
+    case GLFW_PLATFORM_X11:
+        m_platform = Platform::X11;
+        break;
+
+    case GLFW_PLATFORM_WAYLAND:
+        m_platform = Platform::Wayland;
+        break;
+
+    case GLFW_PLATFORM_COCOA:
+        m_platform = Platform::MacOS;
+        break;
+
+    case GLFW_PLATFORM_WIN32:
+        m_platform = Platform::Windows;
+        break;
+
+    case GLFW_PLATFORM_NULL:
+        m_platform = Platform::Null;
+        break;
+
+
+    default:
+        std::cout << "[ERROR] Something serious went wrong: unknown glfwGetPlatform()" << std::endl;
+    }
 }
 
 Application::~Application()
@@ -183,7 +210,8 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
             if (auto obj = winEvent.objHndl.lock())
             {
                 glfwWindowHint(GLFW_SAMPLES, 32);
-                auto winHNDL = glfwCreateWindow(winEvent.size.x, winEvent.size.y, winEvent.name.c_str(), nullptr,
+
+                auto winHNDL = glfwCreateWindow(854, 480, winEvent.name.c_str(), nullptr,
                                                 static_cast<GLFWwindow*>(winEvent.share));
 
                 glfwSetInputMode(winHNDL, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
@@ -205,8 +233,18 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
                 glfwSetWindowMaximizeCallback(winHNDL, &GLFWWindowMaximizeCallback);
                 glfwSetWindowIconifyCallback(winHNDL, &GLFWWindowIconifyCallback);
                 glfwSetWindowRefreshCallback(winHNDL, &GLFWWindowRefreshCallback);
+                glfwSetWindowContentScaleCallback(winHNDL, &GLFWWindowScaleCallback);
+                glfwSetFramebufferSizeCallback(winHNDL, &GLFWFramebufferSizeCallback);
 
                 obj->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RegisterHNDL>(winHNDL));
+
+                Vec2 scale;
+                glfwGetWindowContentScale(winHNDL, &scale.x, &scale.y);
+                obj->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Scale>(scale));
+
+                Vec2 size = winEvent.size;
+                size = Utility::PlatformScaleUp(size, scale);
+                glfwSetWindowSize(winHNDL, size.x, size.y);
             }
 
             return 0;
@@ -233,11 +271,21 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
             auto target = winEvent.objHndl.lock();
             if (target)
             {
-                for (auto& m_winHNDL: m_winHNDLs)
+                for (auto& winHNDL: m_winHNDLs)
                 {
-                    if (m_winHNDL.first.lock() == winEvent.objHndl.lock())
+                    std::shared_ptr winObj = winHNDL.first.lock();
+                    if (winObj == winEvent.objHndl.lock())
                     {
-                        glfwSetWindowSize(static_cast<GLFWwindow*>(m_winHNDL.second), winEvent.size.x, winEvent.size.y);
+                        Vec2 scale;
+                        glfwGetWindowContentScale(static_cast<GLFWwindow*>(winHNDL.second), &scale.x, &scale.y);
+
+                        Vec2 size = winEvent.size;
+                        size = Utility::PlatformScaleUp(size, scale);
+
+                        glfwSetWindowSize(static_cast<GLFWwindow*>(winHNDL.second), size.x, size.y);
+                        winObj->PostEvent(
+                            EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(winObj, winEvent.size));
+
                         break;
                     }
                 }

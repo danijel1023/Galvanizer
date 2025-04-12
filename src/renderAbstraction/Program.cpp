@@ -133,7 +133,17 @@ bool Program::SetUniformI(const std::string& uniform, int a, int b) const
     return true;
 }
 
-bool Program::SetUniformF(const std::string& uniform, float a, float b) const { return false; }
+bool Program::SetUniformF(const std::string& uniform, float a, float b) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform2f(uniformLoc, a, b));
+    return true;
+}
+
 bool Program::SetUniformD(const std::string& uniform, double a, double b) const { return false; }
 bool Program::SetUniformI(const std::string& uniform, int a, int b, int c) const { return false; }
 bool Program::SetUniformF(const std::string& uniform, float a, float b, float c) const { return false; }

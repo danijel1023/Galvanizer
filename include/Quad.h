@@ -29,13 +29,13 @@ enum class QuadType : int
 struct Quad
 {
     bool active = true;
-    IVec2 size, pos;
+    Vec2 size, pos;
     Vec2 rotPoint;
 
     float innerDiameter = 0.0;
     float rotation = 0.0f;
 
-    IVec2 texSize, texPos;
+    Vec2 texSize, texPos;
     std::weak_ptr<QuadTex> texture;
 
     Vec4 color;
@@ -46,7 +46,7 @@ struct Quad
 struct QuadVertex
 {
     int type = 0;
-    IVec2 pos;
+    Vec2 pos;
 
     Vec4 color;
 
@@ -57,6 +57,6 @@ struct QuadVertex
     float rotation = 0;
     float innerDiameter = 0;
 
-    IVec4 posSize;
+    Vec4 posSize;
 };
 }

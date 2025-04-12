@@ -13,7 +13,7 @@ public:
     void Init(std::string_view vertSrc, std::string_view fragSrc);
     void Exit();
 
-    void SetSpace(IVec2 absPos, IVec2 size);
+    void SetSpace(Vec2 absPos, Vec2 size);
     void StartRender();
     void EndRender();
 
@@ -26,8 +26,11 @@ public:
     void RemoveTexture(const std::shared_ptr<QuadTex>& tex);
     void UpdateTextures();
 
+    void SetScale(Vec2 scale);
+
 private:
-    IVec2 m_size, m_pos;
+    Vec2 m_size, m_pos;
+    Vec2 m_scale = Vec2(1.0, 1.0);
 
     std::shared_ptr<RenderAbstraction::Program> m_prog;
 

@@ -8,6 +8,11 @@
 
 namespace Galvanizer
 {
+enum class Platform
+{
+    Null, X11, Wayland, Windows, MacOS
+};
+
 class Application : public GalvanizerObject
 {
 public:
@@ -15,6 +20,7 @@ public:
 
     static void Init();
     static std::shared_ptr<Application> get();
+    static Platform GetPlatform() { return get()->m_platform; }
 
     int Run();
 
@@ -26,6 +32,7 @@ protected:
 
 private:
     static inline std::shared_ptr<Application> m_ApplicationThis;
+    Platform m_platform;
 
     GLFW_BlockingObject m_BO;
     EventLoop m_eventLoop;

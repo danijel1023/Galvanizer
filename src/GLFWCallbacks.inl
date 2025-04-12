@@ -1,6 +1,10 @@
 #pragma once
 #include <cmath>
 
+#include "GLFW/glfw3.h"
+#include "Events.h"
+
+
 // @formatter:off
 
 namespace Galvanizer
@@ -57,13 +61,17 @@ static void GLFWCursorPosCallback(GLFWwindow* winHndl, double xPos, double yPos)
         return;
 
 
-    IVec2 pos(static_cast<int>(std::floor(xPos)), static_cast<int>(std::floor(yPos)));
+    DVec2 pos(xPos, yPos);
 
     IVec2 winSize;
     glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
     pos = {pos.x ,winSize.y - pos.y};
 
-    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Move>(pos));
+    Vec2 scale;
+    glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
+    Vec2 scaledPos = Utility::PlatformScaleDown(Vec2(pos.x, pos.y), scale);
+
+    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Move>(scaledPos));
 }
 
 static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
@@ -73,18 +81,21 @@ static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
         return;
 
 
-    DVec2 DPos;
-    glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
-    IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
+    DVec2 pos;
+    glfwGetCursorPos(winHndl, &pos.x, &pos.y);
 
     IVec2 winSize;
     glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
     pos = {pos.x ,winSize.y - pos.y};
 
+    Vec2 scale;
+    glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
+    Vec2 scaledPos = Utility::PlatformScaleDown(Vec2(pos.x, pos.y), scale);
+
     if (entered)
-        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Enter>(pos));
+        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Enter>(scaledPos));
     else
-        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Leave>(pos));
+        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Leave>(scaledPos));
 }
 
 static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action, int mods)
@@ -116,15 +127,18 @@ static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action,
     else
         ma = MouseAction::Undefined;
 
-    DVec2 DPos;
-    glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
-    IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
+    DVec2 pos;
+    glfwGetCursorPos(winHndl, &pos.x, &pos.y);
 
     IVec2 winSize;
     glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
     pos = {pos.x ,winSize.y - pos.y};
 
-    auto event = EventConfiguration::CreateMouseEvent<MouseMessage::Button>(pos, mb, ma);
+    Vec2 scale;
+    glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
+    Vec2 scaledPos = Utility::PlatformScaleDown(Vec2(pos.x, pos.y), scale);
+
+    auto event = EventConfiguration::CreateMouseEvent<MouseMessage::Button>(scaledPos, mb, ma);
 
     event->modShift = mods & GLFW_MOD_SHIFT;
     event->modAlt   = mods & GLFW_MOD_ALT;
@@ -143,15 +157,18 @@ static void GLFWScrollCallback(GLFWwindow* winHndl, double xOffset, double yOffs
         return;
 
 
-    DVec2 DPos;
-    glfwGetCursorPos(winHndl, &DPos.x, &DPos.y);
-    IVec2 pos(static_cast<int>(std::floor(DPos.x)), static_cast<int>(std::floor(DPos.y)));
+    DVec2 pos;
+    glfwGetCursorPos(winHndl, &pos.x, &pos.y);
 
     IVec2 winSize;
     glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
     pos = {pos.x ,winSize.y - pos.y};
 
-    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Scroll>(pos, DVec2(xOffset, yOffset)));
+    Vec2 scale;
+    glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
+    Vec2 scaledPos = Utility::PlatformScaleDown(Vec2(pos.x, pos.y), scale);
+
+    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Scroll>(scaledPos, Vec2(xOffset, yOffset)));
 }
 
 
@@ -163,7 +180,32 @@ static void GLFWWindowSizeCallback(GLFWwindow* winHndl, int width, int height)
         return;
 
 
-    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(This, IVec2(width, height)));
+    Vec2 scale;
+    glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
+    Vec2 size = Utility::PlatformScaleDown(Vec2(width, height), scale);
+
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(This, size));
+}
+
+static void GLFWFramebufferSizeCallback(GLFWwindow* winHndl, int width, int height)
+{
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
+    if (!This)
+        return;
+
+
+    // IVec2 size = Utility::PlatformScale(winHndl, IVec2(width, height));  --> Framebuffer always matches 1:1
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::FBResize>(This, Vec2(width, height)));
+}
+
+static void GLFWWindowScaleCallback(GLFWwindow* winHndl, float xScale, float yScale)
+{
+    auto This = static_cast<std::weak_ptr<GObj>*>(glfwGetWindowUserPointer(winHndl))->lock();
+    if (!This)
+        return;
+
+
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Scale>(Vec2(xScale, yScale)));
 }
 
 static void GLFWWindowFocusCallback(GLFWwindow* winHndl, int focused)

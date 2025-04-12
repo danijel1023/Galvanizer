@@ -55,6 +55,7 @@ uintptr_t MainWindow::Dispatcher(const std::shared_ptr<Event>& event)
         static_cast<WindowEvent&>(*event).message == WindowMessage::Render)
     {
         renderer.UpdateTextures();
+        renderer.SetSpace(Vec2(0, 0), p_size);
         renderer.Clear();
 
         uintptr_t ret = BaseWindow::Dispatcher(event);
@@ -154,6 +155,14 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
         case WindowMessage::ResizeRequest:
         {
             Application::get()->PostEvent(CreateWindowEvent<WindowMessage::Resize>(p_weakSelf, winEvent.size));
+            return 0;
+        }
+
+        case WindowMessage::Scale:
+        {
+            m_scale = winEvent.scale;
+            renderer.SetScale(m_scale);
+            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
             return 0;
         }
 
