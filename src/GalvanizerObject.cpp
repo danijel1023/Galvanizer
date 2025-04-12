@@ -57,17 +57,13 @@ uintptr_t GalvanizerObject::Dispatcher(const std::shared_ptr<Event>& event)
 
         for (const auto& ch: p_children)
         {
-            if (!ch->p_receiveRender && event->IsType<WindowEvent>()
-                && static_cast<WindowEvent&>(*event).message == WindowMessage::Render)
-                continue;
-
             // If the child is on the same thread, call the dispatcher otherwise,
             // check the 'ignoreChildOnSeparateThread' flag
             if (*ch->p_eventLoopRef == *p_eventLoopRef)
                 ch->Dispatcher(event);
 
             else if (!event->ignoreChildOnSeparateThread)
-                ch->PostEvent(event);
+                ch->PostEvent(event, p_weakSelf);
         }
 
         if (event->priority == ChildPriority::First)
@@ -92,7 +88,7 @@ uintptr_t GalvanizerObject::Dispatcher(const std::shared_ptr<Event>& event)
             {
                 if (*target->p_eventLoopRef != *p_eventLoopRef)
                 {
-                    target->PostEvent(event);
+                    target->PostEvent(event, p_weakSelf);
 
                     //std::cout << "[DEBUG] Shutting down target thread (" << target->p_displayName << ")... thread-id: "
                     //        << std::this_thread::get_id() << std::endl;
@@ -123,7 +119,7 @@ uintptr_t GalvanizerObject::Dispatcher(const std::shared_ptr<Event>& event)
                 {
                     if (*ch->p_eventLoopRef != *p_eventLoopRef)
                     {
-                        ch->PostEvent(event);
+                        ch->PostEvent(event, p_weakSelf);
                         // [TODO] Sometimes, this calls stop on stopped thread??
                         ch->p_eventLoopRef->set(p_eventLoopRef);
                     }
@@ -187,7 +183,7 @@ uintptr_t GalvanizerObject::Callback(const std::shared_ptr<Event>& event)
 
                 // Post init - if ch is on a different thread, it'll use the new thread
                 if (*ch->p_eventLoopRef != *p_eventLoopRef)
-                    ch->PostEvent(EventConfiguration::CreateObjectEvent<ObjectMessage::Init>());
+                    ch->PostEvent(EventConfiguration::CreateObjectEvent<ObjectMessage::Init>(), p_weakSelf);
                 else
                     ch->Dispatcher(EventConfiguration::CreateObjectEvent<ObjectMessage::Init>());
             }
@@ -245,7 +241,8 @@ std::string GalvanizerObject::GetTarget() const
 }
 
 
-void GalvanizerObject::PostEvent(const std::shared_ptr<Event>& event)
+void GalvanizerObject::PostEvent(const std::shared_ptr<Event>& event, const std::weak_ptr<GObj>& sender)
 {
+    event->sender = sender;
     p_eventLoopRef->PostEvent(event, p_weakSelf);
 }

@@ -97,7 +97,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             std::cout << "Posting Close signal to application. thread-id: " << std::this_thread::get_id() << std::endl;
 
             auto app = Application::get();
-            app->PostEvent(CreateObjectEvent<ObjectMessage::Close>(app));
+            app->PostEvent(CreateObjectEvent<ObjectMessage::Close>(app), p_weakSelf);
 
             return 0;
         }
@@ -116,7 +116,8 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         case MouseMessage::Button:
         {
             if (mouseEvent.action == MouseAction::Press && mouseEvent.button == MouseButton::L)
-                PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::ResizeRequest>(Vec2(300, 300)));
+                PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::ResizeRequest>(Vec2(300, 300)),
+                          p_weakSelf);
 
             break;
         }
@@ -152,7 +153,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
                 // Start from 2 bc when the app starts up, the cursor is already 1 (Arrow)
                 static auto cursorType = static_cast<CursorType>(2);
                 Application::get()->PostEvent(
-                    EventConfiguration::CreateAppEvent<AppMessage::SetCursor>(cursorType, p_winHNDL));
+                    EventConfiguration::CreateAppEvent<AppMessage::SetCursor>(cursorType, p_winHNDL), p_weakSelf);
 
                 // Abomination, but it werks
                 cursorType = static_cast<CursorType>(static_cast<int>(cursorType) + 1);
@@ -163,20 +164,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             }
 
             else if (keyEvent.button == KeyButton::Up)
-            {
-                if (keyEvent.action == KeyAction::Release)
-                    break;
-
-                PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
-            }
-
-            else if (keyEvent.button == KeyButton::Down)
-            {
-                if (keyEvent.action == KeyAction::Release)
-                    break;
-
-                PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
-            }
+                PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
 
             break;
         }

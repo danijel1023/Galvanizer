@@ -65,7 +65,7 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
         {
         case WindowMessage::Refresh:
         {
-            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
+            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
             return 0;
         }
 
@@ -74,12 +74,13 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
             auto target = winEvent.objHndl.lock();
             if (target && target != p_weakSelf.lock())
             {
-                target->PostEvent(CreateWindowEvent<WindowMessage::Resize>(winEvent.objHndl, winEvent.size));
+                target->PostEvent(CreateWindowEvent<WindowMessage::Resize>(winEvent.objHndl, winEvent.size),
+                                  p_weakSelf);
                 return 0;
             }
 
             p_size = winEvent.size;
-            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
+            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
 
             return 0;
         }
@@ -93,7 +94,7 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
         case WindowMessage::ResizeRequest:
         {
             if (auto target = winEvent.objHndl.lock())
-                p_parent.lock()->PostEvent(CreateWindowEvent<WindowMessage::Resize>(target, winEvent.size));
+                p_parent.lock()->PostEvent(CreateWindowEvent<WindowMessage::Resize>(target, winEvent.size), p_weakSelf);
 
             return 0;
         }

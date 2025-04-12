@@ -137,7 +137,7 @@ std::shared_ptr<GObj> Application::FindGObj(const std::string_view target)
 int Application::Run()
 {
     const auto init = EventConfiguration::CreateObjectEvent<ObjectMessage::Init>();
-    PostEvent(init);
+    PostEvent(init, p_weakSelf);
 
     // Blocking call
     m_eventLoop.Start();
@@ -236,11 +236,11 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
                 glfwSetWindowContentScaleCallback(winHNDL, &GLFWWindowScaleCallback);
                 glfwSetFramebufferSizeCallback(winHNDL, &GLFWFramebufferSizeCallback);
 
-                obj->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RegisterHNDL>(winHNDL));
+                obj->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RegisterHNDL>(winHNDL), p_weakSelf);
 
                 Vec2 scale;
                 glfwGetWindowContentScale(winHNDL, &scale.x, &scale.y);
-                obj->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Scale>(scale));
+                obj->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Scale>(scale), p_weakSelf);
 
                 Vec2 size = winEvent.size;
                 size = Utility::PlatformScaleUp(size, scale);
@@ -284,7 +284,8 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
 
                         glfwSetWindowSize(static_cast<GLFWwindow*>(winHNDL.second), size.x, size.y);
                         winObj->PostEvent(
-                            EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(winObj, winEvent.size));
+                            EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(winObj, winEvent.size),
+                            p_weakSelf);
 
                         break;
                     }
@@ -345,7 +346,7 @@ void Application::TimerLoop()
             if (event.timeout - std::chrono::steady_clock::now() <= 0ms)
             {
                 if (std::shared_ptr obj = event.timerReceiver.lock())
-                    obj->PostEvent(event.responseEvent);
+                    obj->PostEvent(event.responseEvent, p_weakSelf);
 
                 m_timerEvents.erase(m_timerEvents.begin() + i);
                 i--;

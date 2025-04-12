@@ -16,7 +16,7 @@ friend class Event;\
 inline static int EventID_ = 0;\
 public:\
 static int GetEventID() { return EventID_; }\
-EventType() { m_type = EventID_; }
+EventType() : Event(EventID_) {}
 
 
 
@@ -104,15 +104,18 @@ class Event
 public:
     virtual ~Event() = default;
 
+    explicit Event(int type)
+        : p_type(type) {}
+
     template<class s>
-    [[nodiscard]] bool IsType() const
+    [[nodiscard]] bool IsType() const   // Around 3 times faster than dynamic cast
     {
-        return m_type == s::EventID_;
+        return p_type == s::EventID_;
     }
 
     [[nodiscard]] int GetType() const
     {
-        return m_type;
+        return p_type;
     }
 
     [[nodiscard]] virtual std::string strMessage() const = 0;
@@ -121,12 +124,12 @@ public:
     ChildPriority priority = {};
 
     std::shared_ptr<Event> responseEvent;
-    std::weak_ptr<GObj> receiver;
+    std::weak_ptr<GObj> sender, receiver;
 
     bool ignoreChildOnSeparateThread = false;
 
 protected:
-    int m_type = 0;
+    const int p_type;
 
     friend class EventManager;
 };

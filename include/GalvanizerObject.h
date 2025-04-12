@@ -33,7 +33,7 @@ public:
     [[nodiscard]] std::string GetTarget() const;
     std::weak_ptr<GObj> FindChild(std::string_view name);
 
-    void PostEvent(const std::shared_ptr<Event>& event);
+    void PostEvent(const std::shared_ptr<Event>& event, const std::weak_ptr<GObj>& sender);
 
     [[nodiscard]] bool Closing() const { return m_closing; }
 

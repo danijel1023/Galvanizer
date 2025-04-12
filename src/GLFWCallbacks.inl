@@ -40,7 +40,7 @@ static void GLFWKeyCallback(GLFWwindow* winHndl, int key, int scancode, int acti
     event->modCaps  = mods & GLFW_MOD_CAPS_LOCK;
     event->modNum   = mods & GLFW_MOD_NUM_LOCK;
 
-    This->PostEvent(event);
+    This->PostEvent(event, This);
 }
 
 static void GLFWCharCallback(GLFWwindow* winHndl, unsigned int codePoint)
@@ -49,7 +49,7 @@ static void GLFWCharCallback(GLFWwindow* winHndl, unsigned int codePoint)
     if (!This)
         return;
 
-    This->PostEvent(EventConfiguration::CreateKeyEvent<KeyMessage::Codepoint>(codePoint));
+    This->PostEvent(EventConfiguration::CreateKeyEvent<KeyMessage::Codepoint>(codePoint), This);
 }
 
 
@@ -71,7 +71,7 @@ static void GLFWCursorPosCallback(GLFWwindow* winHndl, double xPos, double yPos)
     glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
     Vec2 scaledPos = Utility::PlatformScaleDown(Vec2(pos.x, pos.y), scale);
 
-    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Move>(scaledPos));
+    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Move>(scaledPos), This);
 }
 
 static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
@@ -93,9 +93,9 @@ static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
     Vec2 scaledPos = Utility::PlatformScaleDown(Vec2(pos.x, pos.y), scale);
 
     if (entered)
-        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Enter>(scaledPos));
+        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Enter>(scaledPos), This);
     else
-        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Leave>(scaledPos));
+        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Leave>(scaledPos), This);
 }
 
 static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action, int mods)
@@ -147,7 +147,7 @@ static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action,
     event->modCaps  = mods & GLFW_MOD_CAPS_LOCK;
     event->modNum   = mods & GLFW_MOD_NUM_LOCK;
 
-    This->PostEvent(event);
+    This->PostEvent(event, This);
 }
 
 static void GLFWScrollCallback(GLFWwindow* winHndl, double xOffset, double yOffset)
@@ -168,7 +168,7 @@ static void GLFWScrollCallback(GLFWwindow* winHndl, double xOffset, double yOffs
     glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
     Vec2 scaledPos = Utility::PlatformScaleDown(Vec2(pos.x, pos.y), scale);
 
-    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Scroll>(scaledPos, Vec2(xOffset, yOffset)));
+    This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Scroll>(scaledPos, Vec2(xOffset, yOffset)), This);
 }
 
 
@@ -184,7 +184,7 @@ static void GLFWWindowSizeCallback(GLFWwindow* winHndl, int width, int height)
     glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
     Vec2 size = Utility::PlatformScaleDown(Vec2(width, height), scale);
 
-    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(This, size));
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(This, size), This);
 }
 
 static void GLFWFramebufferSizeCallback(GLFWwindow* winHndl, int width, int height)
@@ -195,7 +195,7 @@ static void GLFWFramebufferSizeCallback(GLFWwindow* winHndl, int width, int heig
 
 
     // IVec2 size = Utility::PlatformScale(winHndl, IVec2(width, height));  --> Framebuffer always matches 1:1
-    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::FBResize>(This, Vec2(width, height)));
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::FBResize>(This, Vec2(width, height)), This);
 }
 
 static void GLFWWindowScaleCallback(GLFWwindow* winHndl, float xScale, float yScale)
@@ -205,7 +205,7 @@ static void GLFWWindowScaleCallback(GLFWwindow* winHndl, float xScale, float ySc
         return;
 
 
-    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Scale>(Vec2(xScale, yScale)));
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Scale>(Vec2(xScale, yScale)), This);
 }
 
 static void GLFWWindowFocusCallback(GLFWwindow* winHndl, int focused)
@@ -216,9 +216,9 @@ static void GLFWWindowFocusCallback(GLFWwindow* winHndl, int focused)
 
 
     if (focused)
-        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::GainFocus>());
+        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::GainFocus>(), This);
     else
-        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::LoseFocus>());
+        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::LoseFocus>(), This);
 }
 
 static void GLFWWindowCloseCallback(GLFWwindow* winHndl)
@@ -228,7 +228,7 @@ static void GLFWWindowCloseCallback(GLFWwindow* winHndl)
         return;
 
 
-    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Close>());
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Close>(), This);
 }
 
 static void GLFWWindowMaximizeCallback(GLFWwindow* winHndl, int maximized)
@@ -239,9 +239,9 @@ static void GLFWWindowMaximizeCallback(GLFWwindow* winHndl, int maximized)
 
 
     if (maximized)
-        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Maximise>());
+        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Maximise>(), This);
     else
-        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Restore>());
+        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Restore>(), This);
 }
 
 static void GLFWWindowIconifyCallback(GLFWwindow* winHndl, int iconified)
@@ -252,9 +252,9 @@ static void GLFWWindowIconifyCallback(GLFWwindow* winHndl, int iconified)
 
 
     if (iconified)
-        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Iconify>());
+        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Iconify>(), This);
     else
-        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Restore>());
+        This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Restore>(), This);
 }
 
 static void GLFWWindowRefreshCallback(GLFWwindow* winHndl)
@@ -264,6 +264,6 @@ static void GLFWWindowRefreshCallback(GLFWwindow* winHndl)
         return;
 
 
-    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Refresh>());
+    This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Refresh>(), This);
 }
 }

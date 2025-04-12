@@ -45,23 +45,35 @@ MainWindow::MainWindow(const std::string_view name, const std::weak_ptr<GObj>& p
 MainWindow::~MainWindow()
 {
     auto event = CreateWindowEvent<WindowMessage::DestroyWindow>(p_weakSelf);
-    Application::get()->PostEvent(event);
+    Application::get()->PostEvent(event, p_weakSelf);
 }
 
 
 uintptr_t MainWindow::Dispatcher(const std::shared_ptr<Event>& event)
 {
-    if (event->IsType<WindowEvent>() &&
-        static_cast<WindowEvent&>(*event).message == WindowMessage::Render)
+    if (event->IsType<WindowEvent>())
     {
-        renderer.UpdateTextures();
-        renderer.SetSpace(Vec2(0, 0), p_size);
-        renderer.Clear();
+        auto winEvent = static_cast<WindowEvent&>(*event);
 
-        uintptr_t ret = BaseWindow::Dispatcher(event);
+        if (winEvent.message == WindowMessage::Render ||
+            winEvent.message == WindowMessage::RenderInit ||
+            winEvent.message == WindowMessage::RenderExit)
+        {
+            if (event->sender.lock() != p_weakSelf.lock())
+                return 0;   // Event coming from another 'parent' window - ignore it
+        }
 
-        glfwSwapBuffers(static_cast<GLFWwindow*>(p_winHNDL));
-        return ret;
+        if (winEvent.message == WindowMessage::Render)
+        {
+            renderer.UpdateTextures();
+            renderer.SetSpace(Vec2(0, 0), p_size);
+            renderer.Clear();
+
+            uintptr_t ret = BaseWindow::Dispatcher(event);
+
+            glfwSwapBuffers(static_cast<GLFWwindow*>(p_winHNDL));
+            return ret;
+        }
     }
 
     return BaseWindow::Dispatcher(event);
@@ -81,7 +93,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
             thread_local std::string name = GetTarget();
             auto createWin = CreateWindowEvent<WindowMessage::CreateWindow>(p_weakSelf, p_size,
                                                                             name.c_str(), p_parentMainWindow);
-            Application::get()->PostEvent(createWin);
+            Application::get()->PostEvent(createWin, p_weakSelf);
             break;
         }
 
@@ -96,7 +108,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
                 glfwSetWindowUserPointer(static_cast<GLFWwindow*>(p_winHNDL), nullptr);
 
                 auto event = CreateWindowEvent<WindowMessage::DestroyWindow>(p_weakSelf);
-                Application::get()->PostEvent(event);
+                Application::get()->PostEvent(event, p_weakSelf);
             }
 
             break;
@@ -148,13 +160,14 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
 
         case WindowMessage::Close:
         {
-            p_parent.lock()->PostEvent(CreateObjectEvent<ObjectMessage::Close>(p_weakSelf));
+            p_parent.lock()->PostEvent(CreateObjectEvent<ObjectMessage::Close>(p_weakSelf), p_weakSelf);
             break;
         }
 
         case WindowMessage::ResizeRequest:
         {
-            Application::get()->PostEvent(CreateWindowEvent<WindowMessage::Resize>(p_weakSelf, winEvent.size));
+            Application::get()->PostEvent(CreateWindowEvent<WindowMessage::Resize>(p_weakSelf, winEvent.size),
+                                          p_weakSelf);
             return 0;
         }
 
@@ -162,7 +175,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
         {
             m_scale = winEvent.scale;
             renderer.SetScale(m_scale);
-            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>());
+            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
             return 0;
         }
 
@@ -203,11 +216,11 @@ void MainWindow::RenderLoop()
     renderInit->visibility = EventVisibility::Root;
     renderInit->priority = ChildPriority::Last;
     renderInit->message = WindowMessage::RenderInit;
-    renderInit->ignoreChildOnSeparateThread = true;
+    renderInit->sender = p_weakSelf;
     Dispatcher(renderInit);
 
-    PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>());
-    PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>());
+    PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
+    PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
 
     while (m_renderRunning)
     {
@@ -219,7 +232,7 @@ void MainWindow::RenderLoop()
             render->visibility = EventVisibility::Root;
             render->priority = ChildPriority::Last;
             render->message = WindowMessage::Render;
-            render->ignoreChildOnSeparateThread = true;
+            render->sender = p_weakSelf;
 
             //std::cout << "[DEBUG] Started rendering" << std::endl;
             Dispatcher(render);
@@ -234,7 +247,7 @@ void MainWindow::RenderLoop()
     renderExit->visibility = EventVisibility::Root;
     renderExit->priority = ChildPriority::Last;
     renderExit->message = WindowMessage::RenderExit;
-    renderExit->ignoreChildOnSeparateThread = true;
+    renderExit->sender = p_weakSelf;
     Dispatcher(renderExit);
 
     glfwSetWindowUserPointer(static_cast<GLFWwindow*>(p_winHNDL), nullptr);
