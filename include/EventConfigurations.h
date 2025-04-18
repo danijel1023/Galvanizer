@@ -94,8 +94,8 @@ template<MouseMessage msg>
 struct MouseMessageTag {};
 
 void ConfigMouseEvent(MouseMessageTag<MouseMessage::Button>,    std::shared_ptr<MouseEvent> event, Vec2 pos, MouseButton mb, MouseAction ma);
-void ConfigMouseEvent(MouseMessageTag<MouseMessage::Enter>,     std::shared_ptr<MouseEvent> event, Vec2 pos);
-void ConfigMouseEvent(MouseMessageTag<MouseMessage::Leave>,     std::shared_ptr<MouseEvent> event, Vec2 pos);
+void ConfigMouseEvent(MouseMessageTag<MouseMessage::Enter>,     std::shared_ptr<MouseEvent> event);
+void ConfigMouseEvent(MouseMessageTag<MouseMessage::Leave>,     std::shared_ptr<MouseEvent> event);
 void ConfigMouseEvent(MouseMessageTag<MouseMessage::Move>,      std::shared_ptr<MouseEvent> event, Vec2 pos);
 void ConfigMouseEvent(MouseMessageTag<MouseMessage::Scroll>,    std::shared_ptr<MouseEvent> event, Vec2 pos, Vec2 offset);
 

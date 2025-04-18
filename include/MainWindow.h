@@ -21,6 +21,7 @@ public:
     Vec2 GetScale() const { return m_scale; }
 
     QuadRenderer renderer;
+    std::weak_ptr<BaseWindow> mouseFocusWin, winUnderCursor;
 
 protected:
     MainWindow(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac);
@@ -30,9 +31,16 @@ protected:
     EventLoop p_eventLoop;
     EventLoopRef p_mainELRef;
     EventLoopRef* p_parentELRef = nullptr;
+
+    // GLFW window pointer to current window
     void* p_winHNDL = nullptr;
+
+    // GLFW window pointer for setting up sharable resources
     void* p_parentMainWindow = nullptr;
     const char *p_vertShader = nullptr, *p_fragShader = nullptr;
+
+private:
+    void RenderLoop();
 
 private:
     BlockingObject m_BO; // I have to order them like this because of initialization order
@@ -44,8 +52,5 @@ private:
     std::binary_semaphore m_renderSemaphore = std::binary_semaphore(0);
 
     Vec2 m_scale = Vec2(1.0, 1.0);
-
-private:
-    void RenderLoop();
 };
 }

@@ -5,6 +5,7 @@
 
 
 #include "SimpleChild.h"
+#include "SimpleChild2.h"
 #include "PluginWindow.h"
 #include "EventConfigurations.h"
 
@@ -52,17 +53,18 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
             auto& OF = ObjectFactories::GetInstance();
             OF.Get(GetTarget() + ".org")->ptr = &SimpleChild::factory;
+            OF.Get(GetTarget() + ".org.child2")->ptr = &SimpleChild2::factory;
 
 
             /*OF.CreateOwner("plg");
-            Factory* pluginFac = OF.Get(GetTarget() + ".org", "plg");
+            Factory* pluginFac = OF.Get(GetTarget() + ".org2", "plg");
             pluginFac->ptr = &PluginWindow::factory;
             pluginFac->overridesOwner = "app";*/
 
-            m_bkg.color = {1.0, 79.0 / 255, 64.0 / 255, 1.0};
+            m_bkg.color = {111.0f / 255, 62.0f / 255, 119.0f / 255, 1.0};
             m_bkg.size = p_size;
 
-            Vec4 quadColor = {0.7, 0.7, 0.7, 1.0};
+            Vec4 quadColor = {118.0f / 255, 117.0f / 255, 137.0f / 255, 1.0};
             m_q0.color = quadColor;
             m_q1.color = quadColor;
             m_q2.color = quadColor;
@@ -113,20 +115,22 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
         switch (mouseEvent.message)
         {
+        case MouseMessage::Move:
+        {
+            //std::cout << "[DEBUG] Parent mouse move: [" << mouseEvent.pos.x << ", " << mouseEvent.pos.y << "]" <<
+            //        std::endl;
+            break;
+        }
+
         case MouseMessage::Button:
         {
             if (mouseEvent.action == MouseAction::Press && mouseEvent.button == MouseButton::L)
                 PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::ResizeRequest>(Vec2(300, 300)),
                           p_weakSelf);
 
-            break;
-        }
-
-        case MouseMessage::Move:
-        {
-            std::cout << "[DEBUG] Mouse position: [" << mouseEvent.pos.x << ", " << mouseEvent.pos.y << "]" <<
+            std::cout << "[DEBUG] Parent press! [" << mouseEvent.pos.x << ", " << mouseEvent.pos.y << "]" <<
                     std::endl;
-            return 0;
+            break;
         }
 
         default:
@@ -190,10 +194,9 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         {
         case WindowMessage::Render:
         {
-            Vec2 pos = winEvent.pos + p_pos;
-            p_mainWindow->renderer.SetSpace(pos, p_size);
+            p_mainWindowRef->renderer.SetSpace(winEvent.pos, p_size);
 
-            std::cout << "[DEBUG - render]: m_bkg = [" << m_bkg.size.x << ", " << m_bkg.size.y << "]" << std::endl;
+            //std::cout << "[DEBUG - render]: m_bkg = [" << m_bkg.size.x << ", " << m_bkg.size.y << "]" << std::endl;
 
             renderer.AddQuad(m_bkg);
             renderer.AddQuad(m_q0);

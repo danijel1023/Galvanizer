@@ -51,8 +51,6 @@ protected:
 
     EventLoopRef* p_eventLoopRef = nullptr;
 
-    bool p_receiveRender = true;
-
 private:
     Factory* m_originFac = nullptr;
     bool m_closing = false;

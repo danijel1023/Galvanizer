@@ -33,13 +33,13 @@ MainWindow::MainWindow(const std::string_view name, const std::weak_ptr<GObj>& p
     // Create new ELRef
     p_eventLoopRef = &p_mainELRef;
 
-    p_mainWindow = this;
+    p_mainWindowRef = this;
     p_eventLoop.Start();
 
     p_vertShader = g_defaultVert;
     p_fragShader = g_defaultFrag;
 
-    p_receiveRender = false;
+    p_isMainWin = true;
 }
 
 MainWindow::~MainWindow()
@@ -72,6 +72,41 @@ uintptr_t MainWindow::Dispatcher(const std::shared_ptr<Event>& event)
             uintptr_t ret = BaseWindow::Dispatcher(event);
 
             glfwSwapBuffers(static_cast<GLFWwindow*>(p_winHNDL));
+            return ret;
+        }
+    }
+
+    else if (event->IsType<MouseEvent>())
+    {
+        auto& mouseEvent = static_cast<MouseEvent&>(*event);
+
+        // Ignore the "Enter" event coming from the GLFW.
+        // It is directly followed by the "Move" event which is used internally to generate "Enter" event
+        if (mouseEvent.message == MouseMessage::Enter)
+            return 0;
+
+        if (mouseEvent.message == MouseMessage::Leave)
+        {
+            uintptr_t ret = 0;
+            if (auto win = winUnderCursor.lock())
+            {
+                ret = win->Callback(event);
+                winUnderCursor.reset();
+            }
+
+            return ret;
+        }
+
+        if (auto win = mouseFocusWin.lock())
+        {
+            mouseEvent.pos -= win->GetAbsPos();
+            uintptr_t ret = win->Callback(event);
+            mouseEvent.pos += win->GetAbsPos();
+
+            // The focus has changed (not focused anymore)
+            if (mouseFocusWin.lock() != win)
+                ret = BaseWindow::Dispatcher(CreateMouseEvent<MouseMessage::Move>(mouseEvent.pos));
+
             return ret;
         }
     }
@@ -185,17 +220,6 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
 
         default:
             break;
-        }
-    }
-
-    else if (event->IsType<MouseEvent>())
-    {
-        auto& mouseEvent = static_cast<MouseEvent&>(*event);
-
-        switch (mouseEvent.message)
-        {
-        default:
-            return 0;
         }
     }
 

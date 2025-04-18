@@ -201,18 +201,14 @@ void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Button>,
     event->action = ma;
 }
 
-void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Enter>, std::shared_ptr<MouseEvent> event,
-                                          Vec2 pos)
+void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Enter>, std::shared_ptr<MouseEvent> event)
 {
     event->visibility = EventVisibility::Single;
-    event->pos = pos;
 }
 
-void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Leave>, std::shared_ptr<MouseEvent> event,
-                                          Vec2 pos)
+void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Leave>, std::shared_ptr<MouseEvent> event)
 {
     event->visibility = EventVisibility::Single;
-    event->pos = pos;
 }
 
 void EventConfiguration::ConfigMouseEvent(MouseMessageTag<MouseMessage::Move>, std::shared_ptr<MouseEvent> event,

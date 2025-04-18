@@ -80,22 +80,10 @@ static void GLFWCursorEnterCallback(GLFWwindow* winHndl, int entered)
     if (!This)
         return;
 
-
-    DVec2 pos;
-    glfwGetCursorPos(winHndl, &pos.x, &pos.y);
-
-    IVec2 winSize;
-    glfwGetWindowSize(winHndl, &winSize.x, &winSize.y);
-    pos = {pos.x ,winSize.y - pos.y};
-
-    Vec2 scale;
-    glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
-    Vec2 scaledPos = Utility::PlatformScaleDown(Vec2(pos.x, pos.y), scale);
-
     if (entered)
-        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Enter>(scaledPos), This);
+        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Enter>(), This);
     else
-        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Leave>(scaledPos), This);
+        This->PostEvent(EventConfiguration::CreateMouseEvent<MouseMessage::Leave>(), This);
 }
 
 static void GLFWMouseButtonCallback(GLFWwindow* winHndl, int button, int action, int mods)

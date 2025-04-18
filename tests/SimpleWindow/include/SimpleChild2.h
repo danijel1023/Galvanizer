@@ -4,21 +4,19 @@
 #include "Quad.h"
 
 
-class SimpleChild : public Galvanizer::BaseWindow
+class SimpleChild2 : public Galvanizer::BaseWindow
 {
 public:
     static std::shared_ptr<Galvanizer::GObj> factory(std::string_view name,
                                                      const std::weak_ptr<Galvanizer::GObj>& parent,
                                                      Galvanizer::Factory* originFac);
-    ~SimpleChild() override;
+    ~SimpleChild2() override;
 
     uintptr_t Callback(const std::shared_ptr<Galvanizer::Event>& event) override;
 
 protected:
-    SimpleChild(std::string_view name, const std::weak_ptr<Galvanizer::GObj>& parent, Galvanizer::Factory* originFac);
+    SimpleChild2(std::string_view name, const std::weak_ptr<Galvanizer::GObj>& parent, Galvanizer::Factory* originFac);
 
 private:
     Galvanizer::Quad m_bkg;
-    Galvanizer::Vec2 m_diff;
-    bool m_tracking = false;
 };

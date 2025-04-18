@@ -59,28 +59,49 @@ std::string WindowEvent::strMessage() const
 {
     switch (message)
     {
-    case WindowMessage::Iconify:
-        return "WindowEvent::Iconify";
-    case WindowMessage::Maximise:
-        return "WindowEvent::Maximise";
-    case WindowMessage::Restore:
-        return "WindowEvent::Restore";
-    case WindowMessage::Resize:
-        return "WindowEvent::Resize";
-    case WindowMessage::Render:
-        return "WindowEvent::Render";
-    case WindowMessage::Close:
-        return "WindowEvent::Close";
-    case WindowMessage::Position:
-        return "WindowEvent::Position";
-    case WindowMessage::Refresh:
-        return "WindowEvent::Refresh";
     case WindowMessage::Undefined:
         return "WindowEvent::Undefined";
+
+    case WindowMessage::Maximise:
+        return "WindowEvent::Maximise";
+    case WindowMessage::Iconify:
+        return "WindowEvent::Iconify";
+    case WindowMessage::Restore:
+        return "WindowEvent::Restore";
+
+    case WindowMessage::Resize:
+        return "WindowEvent::Resize";
+    case WindowMessage::ResizeRequest:
+        return "WindowEvent::ResizeRequest";
+    case WindowMessage::Position:
+        return "WindowEvent::Position";
+    case WindowMessage::PositionRequest:
+        return "WindowEvent::PositionRequest";
+    case WindowMessage::FBResize:
+        return "WindowEvent::FBResize";
+    case WindowMessage::FBResizeRequest:
+        return "WindowEvent::FBResizeRequest";
+
     case WindowMessage::GainFocus:
         return "WindowEvent::GainFocus";
     case WindowMessage::LoseFocus:
         return "WindowEvent::LoseFocus";
+
+    case WindowMessage::Close:
+        return "WindowEvent::Close";
+    case WindowMessage::Refresh:
+        return "WindowEvent::Refresh";
+    case WindowMessage::Scale:
+        return "WindowEvent::Scale";
+
+    case WindowMessage::RenderInit:
+        return "WindowEvent::RenderInit";
+    case WindowMessage::RenderExit:
+        return "WindowEvent::RenderExit";
+    case WindowMessage::Render:
+        return "WindowEvent::Render";
+    case WindowMessage::RenderRequest:
+        return "WindowEvent::RenderRequest";
 
     case WindowMessage::CreateWindow:
         return "WindowEvent::CreateWindow";

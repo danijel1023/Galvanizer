@@ -29,5 +29,48 @@ PluginWindow::~PluginWindow() = default;
 
 uintptr_t PluginWindow::Callback(const std::shared_ptr<Event>& event)
 {
+    if (event->IsType<ObjectEvent>())
+    {
+        auto objEvent = static_cast<ObjectEvent&>(*event);
+
+        switch (objEvent.message)
+        {
+        case ObjectMessage::Init:
+        {
+            //p_size = {854, 480};
+            p_size = {300, 300};
+
+            break;
+        }
+
+        case ObjectMessage::Terminate:
+        {
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
+    else if (event->IsType<MouseEvent>())
+    {
+        auto mouseEvent = static_cast<MouseEvent&>(*event);
+
+        switch (mouseEvent.message)
+        {
+        case MouseMessage::Enter:
+        case MouseMessage::Leave:
+        {
+            std::cout << "[DEBUG] Plugin: " << event->strMessage() << "[" << mouseEvent.pos.x << ", " <<
+                    mouseEvent.pos.y << "]" << std::endl;
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
     return MainWindow::Callback(event);
 }

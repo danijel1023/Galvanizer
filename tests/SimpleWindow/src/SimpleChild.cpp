@@ -5,6 +5,7 @@
 #include "EventConfigurations.h"
 
 using namespace Galvanizer;
+using namespace EventConfiguration;
 
 namespace
 {
@@ -36,10 +37,10 @@ uintptr_t SimpleChild::Callback(const std::shared_ptr<Event>& event)
         {
         case ObjectMessage::Init:
         {
-            p_pos = {100, 100};
+            p_pos = {50, 50};
             p_size = {100, 200};
 
-            m_bkg.color = {200.0 / 255, 200.0 / 255, 200.0 / 255, 1.0};
+            m_bkg.color = {117.0 / 255, 137.0 / 255, 129.0 / 255, 1.0};
             m_bkg.size = p_size;
             break;
         }
@@ -57,9 +58,50 @@ uintptr_t SimpleChild::Callback(const std::shared_ptr<Event>& event)
         {
         case WindowMessage::Render:
         {
-            p_mainWindow->renderer.SetSpace(winEvent.pos + p_pos, p_size);
-            p_mainWindow->renderer.AddQuad(m_bkg);
-            p_mainWindow->renderer.Render();
+            p_mainWindowRef->renderer.SetSpace(winEvent.pos, p_size);
+            p_mainWindowRef->renderer.AddQuad(m_bkg);
+            p_mainWindowRef->renderer.Render();
+            break;
+        }
+
+        default:
+            break;
+        }
+    }
+
+    else if (event->IsType<MouseEvent>())
+    {
+        auto mouseEvent = static_cast<MouseEvent&>(*event);
+
+        switch (mouseEvent.message)
+        {
+        case MouseMessage::Move:
+        {
+            if (m_tracking)
+            {
+                // Keep the distance from mouse and the lower left corner of the BaseWindow, the same.
+                p_pos += mouseEvent.pos - m_diff;
+                p_mainWindowRef->PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
+            }
+
+
+            //std::cout << "[DEBUG] Child mouse move: [" << mouseEvent.pos.x << ", " << mouseEvent.pos.y << "]" <<
+            //        std::endl;
+            break;
+        }
+
+        case MouseMessage::Button:
+        {
+            std::cout << "[DEBUG] Child button! [" << mouseEvent.pos.x << ", " << mouseEvent.pos.y << "]" <<
+                    std::endl;
+
+            if (mouseEvent.action == MouseAction::Press)
+                m_tracking = true;
+            else
+                m_tracking = false;
+
+            m_diff = mouseEvent.pos;
+
             break;
         }
 
