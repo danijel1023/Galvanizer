@@ -99,16 +99,20 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
 
         case ObjectMessage::Close:
         {
-            m_renderRunning = false;
-            m_renderSemaphore.release();
-            m_renderThread.join();
+            // If we close before registering the window
+            if (m_renderRunning)
+            {
+                m_renderRunning = false;
+                m_renderSemaphore.release();
+                m_renderThread.join();
+            }
 
             if (p_winHNDL)
             {
                 glfwSetWindowUserPointer(static_cast<GLFWwindow*>(p_winHNDL), nullptr);
 
-                auto event = CreateWindowEvent<WindowMessage::DestroyWindow>(p_weakSelf);
-                Application::get()->PostEvent(event, p_weakSelf);
+                auto destroy = CreateWindowEvent<WindowMessage::DestroyWindow>(p_weakSelf);
+                Application::get()->PostEvent(destroy, p_weakSelf);
             }
 
             break;
