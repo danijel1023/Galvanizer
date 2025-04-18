@@ -204,7 +204,11 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
         case MouseMessage::Button:
         {
             if (mouseEvent.action == MouseAction::Press)
+            {
                 p_mainWindowRef->mouseFocusWin = std::static_pointer_cast<BaseWindow>(p_weakSelf.lock());
+                p_mainWindowRef->keyboardFocus = p_weakSelf;
+            }
+
             else
                 p_mainWindowRef->mouseFocusWin.reset();
 

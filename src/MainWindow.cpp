@@ -111,6 +111,14 @@ uintptr_t MainWindow::Dispatcher(const std::shared_ptr<Event>& event)
         }
     }
 
+    else if (event->IsType<KeyEvent>())
+    {
+        if (auto focus = keyboardFocus.lock())
+            return focus->Callback(event);
+        else
+            return Callback(event);
+    }
+
     return BaseWindow::Dispatcher(event);
 }
 

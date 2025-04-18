@@ -22,6 +22,7 @@ public:
 
     QuadRenderer renderer;
     std::weak_ptr<BaseWindow> mouseFocusWin, winUnderCursor;
+    std::weak_ptr<GObj> keyboardFocus;
 
 protected:
     MainWindow(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac);
