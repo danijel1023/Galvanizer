@@ -248,6 +248,9 @@ void MainWindow::RenderLoop()
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_SCISSOR_TEST);
 
+    // No more "banding" of elements when resizing
+    glfwSwapInterval(0);
+
     auto renderInit = std::make_shared<WindowEvent>();
     renderInit->visibility = EventVisibility::Root;
     renderInit->priority = ChildPriority::Last;
