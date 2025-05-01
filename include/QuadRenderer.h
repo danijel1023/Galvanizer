@@ -4,6 +4,11 @@
 
 namespace Galvanizer
 {
+enum class Rounding
+{
+    None, Round, Floor, Ceil, Trunc
+};
+
 class QuadRenderer
 {
 public:
@@ -13,11 +18,14 @@ public:
     void Init(std::string_view vertSrc, std::string_view fragSrc);
     void Exit();
 
-    void SetSpace(Vec2 absPos, Vec2 size);
+    void SetSpace(IVec2 absPos, IVec2 size);
+    /*
     void StartRender();
     void EndRender();
+    */
 
-    void AddQuad(const Quad& quad);
+    void AddQuad(const Quad& quad, Vec2 scale = {1.0f, 1.0f},
+                 Rounding sizeRoundType = Rounding::None, Rounding posRoundType = Rounding::None);
 
     void Clear();
     void Render();
@@ -26,12 +34,7 @@ public:
     void RemoveTexture(const std::shared_ptr<QuadTex>& tex);
     void UpdateTextures();
 
-    void SetScale(Vec2 scale);
-
 private:
-    Vec2 m_size, m_pos;
-    Vec2 m_scale = Vec2(1.0, 1.0);
-
     std::shared_ptr<RenderAbstraction::Program> m_prog;
 
     size_t m_posBuff;

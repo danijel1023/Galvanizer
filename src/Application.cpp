@@ -244,7 +244,7 @@ uintptr_t Application::Callback(const std::shared_ptr<Event>& event)
 
                 Vec2 size = winEvent.size;
                 size = Utility::PlatformScaleUp(size, scale);
-                glfwSetWindowSize(winHNDL, size.x, size.y);
+                glfwSetWindowSize(winHNDL, std::round(size.x), std::round(size.y));
             }
 
             return 0;

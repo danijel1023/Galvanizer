@@ -1,7 +1,10 @@
 #pragma once
+#include <cmath>
 
 namespace Galvanizer
 {
+struct IVec2;
+
 struct Vec2
 {
     float x = 0, y = 0;
@@ -43,6 +46,8 @@ struct Vec2
         y -= second.y;
         return *this;
     }
+
+    explicit operator IVec2() const;
 };
 
 struct Vec3
@@ -98,6 +103,8 @@ struct IVec2
         y -= second.y;
         return *this;
     }
+
+    explicit operator Vec2() const;
 };
 
 struct IVec3
@@ -118,4 +125,38 @@ enum class VarType
     DVec2, DVec3, DVec4,
     IVec2, IVec3, IVec4
 };
+
+
+inline Vec2::operator IVec2() const
+{
+    return IVec2(x, y);
+}
+
+inline IVec2::operator Vec2() const
+{
+    return Vec2(x, y);
+}
+
+namespace Utility
+{
+inline IVec2 Round(Vec2 vec)
+{
+    return IVec2(std::round(vec.x), std::round(vec.y));
+}
+
+inline IVec2 Floor(Vec2 vec)
+{
+    return IVec2(std::floor(vec.x), std::floor(vec.y));
+}
+
+inline IVec2 Ceil(Vec2 vec)
+{
+    return IVec2(std::ceil(vec.x), std::ceil(vec.y));
+}
+
+inline IVec2 Trunc(Vec2 vec)
+{
+    return IVec2(std::trunc(vec.x), std::trunc(vec.y));
+}
+}
 }

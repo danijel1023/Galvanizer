@@ -2,6 +2,7 @@
 #include "MainWindow.h"
 
 #include "EventConfigurations.h"
+#include "Utility.h"
 
 using namespace Galvanizer;
 using namespace EventConfiguration;
@@ -39,7 +40,7 @@ Vec2 BaseWindow::GetAbsPos() const
         return {};
 
     if (const auto parent = std::dynamic_pointer_cast<BaseWindow>(p_parent.lock()))
-        return parent->GetAbsPos() + p_pos;
+        return parent->GetAbsPos() + p_virtualPos;
 
     return {};
 }
@@ -56,13 +57,13 @@ uintptr_t BaseWindow::Dispatcher(const std::shared_ptr<Event>& event)
         case WindowMessage::Render:
         {
             // Add my pos to absolute pos
-            winEvent.pos += p_pos;
+            winEvent.pos += p_pxPos;
 
             // Send to children and call the callback
             auto ret = GalvanizerObject::Dispatcher(event);
 
             // Remove my pos from absolute pos
-            winEvent.pos -= p_pos;
+            winEvent.pos -= p_pxPos;
             return ret;
         }
 
@@ -92,26 +93,26 @@ uintptr_t BaseWindow::Dispatcher(const std::shared_ptr<Event>& event)
                     continue;
 
                 // If the mouse is LEFT form the child window
-                if (pos.x < ch->p_pos.x)
+                if (pos.x < ch->p_virtualPos.x)
                     continue;
 
                 // If the mouse is RIGHT form the child window
-                if (pos.x > ch->p_pos.x + ch->p_size.x)
+                if (pos.x > ch->p_virtualPos.x + ch->p_virtualSize.x)
                     continue;
 
                 // If the mouse is BELOW form the child window
-                if (pos.y < ch->p_pos.y)
+                if (pos.y < ch->p_virtualPos.y)
                     continue;
 
                 // If the mouse is ABOVE form the child window
-                if (pos.y > ch->p_pos.y + ch->p_size.y)
+                if (pos.y > ch->p_virtualPos.y + ch->p_virtualSize.y)
                     continue;
 
-                pos -= ch->p_pos;
+                pos -= ch->p_virtualPos;
                 if (!ch->Dispatcher(event))
                     return 0;
 
-                pos += ch->p_pos;
+                pos += ch->p_virtualPos;
             }
         }
     }
@@ -138,31 +139,18 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
         {
             auto target = winEvent.objHndl.lock();
             if (target && target != p_weakSelf.lock())
-            {
-                target->PostEvent(CreateWindowEvent<WindowMessage::Resize>(winEvent.objHndl, winEvent.size),
-                                  p_weakSelf);
-                return 0;
-            }
+                return target->Dispatcher(event);
 
-            p_size = winEvent.size;
-            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
+            SetVirtualSize(winEvent.size);
+            ResizeOutline(p_mainWindowRef->outlineThickness);
 
-            m_q0.pos = {0, 0};
-            m_q1.pos = {0, 0};
-            m_q2.pos = {0, p_size.y - 2};
-            m_q3.pos = {p_size.x - 2, 0};
-
-            m_q0.size = {p_size.x, 2};
-            m_q1.size = {2, p_size.y};
-            m_q2.size = {p_size.x, 2};
-            m_q3.size = {2, p_size.y};
-
+            p_mainWindowRef->PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
             return 0;
         }
 
         case WindowMessage::Position:
         {
-            p_pos = winEvent.pos;
+            SetVirtualPos(winEvent.pos);
             return 0;
         }
 
@@ -174,18 +162,36 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
             return 0;
         }
 
+        case WindowMessage::Scale:
+        {
+            SetVirtualPos(p_virtualPos);
+            SetVirtualSize(p_virtualSize);
+            return 0;
+        }
+
         case WindowMessage::Render:
         {
             if (!p_mainWindowRef)
                 return 0;
 
-            if (!m_renderOutline)
+            if (!p_mainWindowRef->enableOutline || !m_renderOutline)
                 return 0;
 
-            p_mainWindowRef->renderer.AddQuad(m_q0);
-            p_mainWindowRef->renderer.AddQuad(m_q1);
-            p_mainWindowRef->renderer.AddQuad(m_q2);
-            p_mainWindowRef->renderer.AddQuad(m_q3);
+            auto scale = p_mainWindowRef->GetScale();
+
+            Quad scaledQ0 = m_q0, scaledQ1 = m_q1, scaledQ2 = m_q2, scaledQ3 = m_q3;
+            scaledQ0.size = {std::round(m_q0.size.x * scale.x), std::round(m_q0.size.y * scale.y)};
+            scaledQ1.size = {std::round(m_q1.size.x * scale.x), std::round(m_q1.size.y * scale.y)};
+            scaledQ2.size = {std::round(m_q2.size.x * scale.x), std::round(m_q2.size.y * scale.y)};
+            scaledQ3.size = {std::round(m_q3.size.x * scale.x), std::round(m_q3.size.y * scale.y)};
+
+            scaledQ2.pos = {0, std::round(p_pxSize.y) - scaledQ2.size.y};
+            scaledQ3.pos = {std::round(p_pxSize.x) - scaledQ3.size.x, 0};
+
+            p_mainWindowRef->renderer.AddQuad(scaledQ0);
+            p_mainWindowRef->renderer.AddQuad(scaledQ1);
+            p_mainWindowRef->renderer.AddQuad(scaledQ2);
+            p_mainWindowRef->renderer.AddQuad(scaledQ3);
             p_mainWindowRef->renderer.Render();
             return 0;
         }
@@ -197,7 +203,7 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
 
     else if (event->IsType<MouseEvent>())
     {
-        auto mouseEvent = static_cast<MouseEvent&>(*event);
+        auto& mouseEvent = static_cast<MouseEvent&>(*event);
 
         switch (mouseEvent.message)
         {
@@ -217,7 +223,7 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
 
         case MouseMessage::Move:
         {
-            auto self = std::static_pointer_cast<BaseWindow>(p_weakSelf.lock());
+            const auto self = std::static_pointer_cast<BaseWindow>(p_weakSelf.lock());
             auto winUnderCursor = p_mainWindowRef->winUnderCursor.lock();
             if (winUnderCursor != self)
             {
@@ -234,6 +240,10 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
         case MouseMessage::Enter:
         {
             m_renderOutline = true;
+
+            if (!p_mainWindowRef->enableOutline)
+                return 0;
+
             p_mainWindowRef->PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
             return 0;
         }
@@ -241,6 +251,10 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
         case MouseMessage::Leave:
         {
             m_renderOutline = false;
+
+            if (!p_mainWindowRef->enableOutline)
+                return 0;
+
             p_mainWindowRef->PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
             return 0;
         }
@@ -252,26 +266,18 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
 
     else if (event->IsType<ObjectEvent>())
     {
-        auto objEvent = static_cast<ObjectEvent&>(*event);
+        auto& objEvent = static_cast<ObjectEvent&>(*event);
 
         switch (objEvent.message)
         {
         case ObjectMessage::Init:
         {
-            m_q0.pos = {0, 0};
-            m_q1.pos = {0, 0};
-            m_q2.pos = {0, p_size.y - 2};
-            m_q3.pos = {p_size.x - 2, 0};
+            m_q0.color = {224 / 255.0f, 134 / 255.0f, 60 / 255.0f, 1.0f};
+            m_q1.color = {224 / 255.0f, 134 / 255.0f, 60 / 255.0f, 1.0f};
+            m_q2.color = {224 / 255.0f, 134 / 255.0f, 60 / 255.0f, 1.0f};
+            m_q3.color = {224 / 255.0f, 134 / 255.0f, 60 / 255.0f, 1.0f};
 
-            m_q0.size = {p_size.x, 2};
-            m_q1.size = {2, p_size.y};
-            m_q2.size = {p_size.x, 2};
-            m_q3.size = {2, p_size.y};
-
-            m_q0.color = {224.0f / 255, 134.0f / 255, 60.0f / 255, 1.0f};
-            m_q1.color = {224.0f / 255, 134.0f / 255, 60.0f / 255, 1.0f};
-            m_q2.color = {224.0f / 255, 134.0f / 255, 60.0f / 255, 1.0f};
-            m_q3.color = {224.0f / 255, 134.0f / 255, 60.0f / 255, 1.0f};
+            ResizeOutline(p_mainWindowRef->outlineThickness);
             break;
         }
 
@@ -281,4 +287,42 @@ uintptr_t BaseWindow::Callback(const std::shared_ptr<Event>& event)
     }
 
     return GalvanizerObject::Callback(event);
+}
+
+
+void BaseWindow::ResizeOutline(float virtualThickness)
+{
+    m_q0.size = {p_virtualSize.x, virtualThickness};
+    m_q1.size = {virtualThickness, p_virtualSize.y};
+    m_q2.size = {p_virtualSize.x, virtualThickness};
+    m_q3.size = {virtualThickness, p_virtualSize.y};
+}
+
+
+void BaseWindow::SetVirtualPos(Vec2 pos)
+{
+    p_virtualPos = pos;
+    //p_pxPos = Utility::PlatformScaleUp(pos, p_mainWindowRef->GetScale());
+    p_pxPos = {pos.x * p_mainWindowRef->GetScale().x, pos.y * p_mainWindowRef->GetScale().y};
+}
+
+void BaseWindow::SetVirtualSize(Vec2 size)
+{
+    p_virtualSize = size;
+    //p_pxSize = Utility::PlatformScaleUp(size, p_mainWindowRef->GetScale());
+    p_pxSize = {size.x * p_mainWindowRef->GetScale().x, size.y * p_mainWindowRef->GetScale().y};
+}
+
+void BaseWindow::SetPxPos(Vec2 pos)
+{
+    p_pxPos = pos;
+    //p_virtualPos = Utility::PlatformScaleDown(pos, p_mainWindowRef->GetScale());
+    p_virtualPos = {pos.x / p_mainWindowRef->GetScale().x, pos.y / p_mainWindowRef->GetScale().y};
+}
+
+void BaseWindow::SetPxSize(Vec2 size)
+{
+    p_pxSize = size;
+    //p_virtualSize = Utility::PlatformScaleDown(size, p_mainWindowRef->GetScale());
+    p_virtualSize = {size.x / p_mainWindowRef->GetScale().x, size.y / p_mainWindowRef->GetScale().y};
 }

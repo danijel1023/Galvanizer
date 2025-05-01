@@ -1,4 +1,5 @@
 #include <iostream>
+#include <cmath>
 
 #include "Application.h"
 #include "SimpleWindow.h"
@@ -8,6 +9,8 @@
 #include "SimpleChild2.h"
 #include "PluginWindow.h"
 #include "EventConfigurations.h"
+
+#include "../vendor/glad/include/glad/glad.h"
 
 
 using namespace Galvanizer;
@@ -42,14 +45,15 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 {
     if (event->IsType<ObjectEvent>())
     {
-        auto objEvent = static_cast<ObjectEvent&>(*event);
+        auto& objEvent = static_cast<ObjectEvent&>(*event);
 
         switch (objEvent.message)
         {
         case ObjectMessage::Init:
         {
+            //Callback(EventConfiguration::CreateWindowEvent<WindowMessage::Scale>(Vec2(1.5, 1.5)));
             //p_size = {854, 480};
-            p_size = {300, 300};
+            SetVirtualSize({300, 300});
 
             auto& OF = ObjectFactories::GetInstance();
             OF.Get(GetTarget() + ".org")->ptr = &SimpleChild::factory;
@@ -62,7 +66,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             pluginFac->overridesOwner = "app";*/
 
             m_bkg.color = {111.0f / 255, 62.0f / 255, 119.0f / 255, 1.0};
-            m_bkg.size = p_size;
+            m_bkg.size = p_virtualSize;
 
             Vec4 quadColor = {118.0f / 255, 117.0f / 255, 137.0f / 255, 1.0};
             m_q0.color = quadColor;
@@ -88,6 +92,8 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
             renderer.AddTexture(m_tex);
 
+            enableOutline = true;
+            outlineThickness = 1.9;
             break;
         }
 
@@ -111,7 +117,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
     else if (event->IsType<MouseEvent>())
     {
-        auto mouseEvent = static_cast<MouseEvent&>(*event);
+        auto& mouseEvent = static_cast<MouseEvent&>(*event);
 
         switch (mouseEvent.message)
         {
@@ -133,6 +139,27 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             break;
         }
 
+        case MouseMessage::Scroll:
+        {
+            if (mouseEvent.scrollOffset.y < 0)
+            {
+                m_xAreaShrink++;
+                //p_pxSize.x -= 1.0;
+            }
+
+            if (mouseEvent.scrollOffset.y > 0)
+            {
+                if (m_xAreaShrink > 0)
+                {
+                    m_xAreaShrink--;
+                    //p_pxSize.x += 1.0;
+                }
+            }
+
+            PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
+            break;
+        }
+
         default:
             break;
         }
@@ -140,7 +167,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
     else if (event->IsType<KeyEvent>())
     {
-        auto keyEvent = static_cast<KeyEvent&>(*event);
+        auto& keyEvent = static_cast<KeyEvent&>(*event);
 
         switch (keyEvent.message)
         {
@@ -170,6 +197,17 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             else if (keyEvent.button == KeyButton::Up)
                 PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
 
+            if (keyEvent.button == static_cast<KeyButton>('C'))
+            {
+                m_capture = true;
+            }
+
+            else if (keyEvent.button == static_cast<KeyButton>('O') && keyEvent.action == KeyAction::Press)
+            {
+                enableOutline = !enableOutline;
+                PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
+            }
+
             break;
         }
 
@@ -188,22 +226,55 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
 
     else if (event->IsType<WindowEvent>())
     {
-        auto winEvent = static_cast<WindowEvent&>(*event);
+        auto& winEvent = static_cast<WindowEvent&>(*event);
 
         switch (winEvent.message)
         {
         case WindowMessage::Render:
         {
-            p_mainWindowRef->renderer.SetSpace(winEvent.pos, p_size);
+            auto size = p_pxSize;
+            size.x -= m_xAreaShrink;
+
+            renderer.SetSpace(Utility::Round(winEvent.pos), Utility::Round(p_pxSize));
 
             //std::cout << "[DEBUG - render]: m_bkg = [" << m_bkg.size.x << ", " << m_bkg.size.y << "]" << std::endl;
 
-            renderer.AddQuad(m_bkg);
-            renderer.AddQuad(m_q0);
-            renderer.AddQuad(m_q1);
-            renderer.AddQuad(m_q2);
-            renderer.AddQuad(m_q3);
+            Vec2 scale = GetScale();
+            Quad scaledBkg = m_bkg, scaledQ0 = m_q0, scaledQ1 = m_q1, scaledQ2 = m_q2, scaledQ3 = m_q3;
+            scaledBkg.size = {std::round(m_bkg.size.x * scale.x), std::round(m_bkg.size.y * scale.y)};
+            scaledQ0.size = {std::round(m_q0.size.x * scale.x), std::round(m_q0.size.y * scale.y)};
+            scaledQ1.size = {std::round(m_q1.size.x * scale.x), std::round(m_q1.size.y * scale.y)};
+            scaledQ2.size = {std::round(m_q2.size.x * scale.x), std::round(m_q2.size.y * scale.y)};
+            scaledQ3.size = {std::round(m_q3.size.x * scale.x), std::round(m_q3.size.y * scale.y)};
+
+
+            scaledBkg.pos = {std::round(m_bkg.pos.x * scale.x), std::round(m_bkg.pos.y * scale.y)};
+            scaledQ0.pos = {std::round(m_q0.pos.x * scale.x), std::round(m_q0.pos.y * scale.y)};
+            scaledQ1.pos = {std::round(m_q1.pos.x * scale.x), std::round(m_q1.pos.y * scale.y)};
+            scaledQ2.pos = {std::round(m_q2.pos.x * scale.x), std::round(m_q2.pos.y * scale.y)};
+            scaledQ3.pos = {std::round(m_q3.pos.x * scale.x), std::round(m_q3.pos.y * scale.y)};
+
+            renderer.AddQuad(scaledBkg);
+            renderer.AddQuad(scaledQ0);
+            renderer.AddQuad(scaledQ1);
+            renderer.AddQuad(scaledQ2);
+            renderer.AddQuad(scaledQ3);
             renderer.Render();
+
+
+            if (m_capture)
+            {
+                m_capture = false;
+
+                int width = p_virtualSize.x * GetScale().x;
+                int height = p_virtualSize.y * GetScale().y;
+
+                auto* data = new uint8_t[width * height * 4];
+                glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+                std::cout << "data: " << data << std::endl;
+                delete[] data;
+            }
 
             break;
         }
@@ -211,8 +282,7 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
         case WindowMessage::Resize:
         {
             MainWindow::Callback(event);
-            m_bkg.size = p_size;
-
+            m_bkg.size = p_virtualSize;
             return 0;
         }
 

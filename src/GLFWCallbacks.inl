@@ -171,7 +171,6 @@ static void GLFWWindowSizeCallback(GLFWwindow* winHndl, int width, int height)
     Vec2 scale;
     glfwGetWindowContentScale(winHndl, &scale.x, &scale.y);
     Vec2 size = Utility::PlatformScaleDown(Vec2(width, height), scale);
-
     This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::Resize>(This, size), This);
 }
 
@@ -182,7 +181,6 @@ static void GLFWFramebufferSizeCallback(GLFWwindow* winHndl, int width, int heig
         return;
 
 
-    // IVec2 size = Utility::PlatformScale(winHndl, IVec2(width, height));  --> Framebuffer always matches 1:1
     This->PostEvent(EventConfiguration::CreateWindowEvent<WindowMessage::FBResize>(This, Vec2(width, height)), This);
 }
 

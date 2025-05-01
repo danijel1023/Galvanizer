@@ -198,7 +198,7 @@ uintptr_t GalvanizerObject::Callback(const std::shared_ptr<Event>& event)
 
     if (event->IsType<ELEvent>())
     {
-        auto elEvent = static_cast<ELEvent&>(*event);
+        auto& elEvent = static_cast<ELEvent&>(*event);
         const auto lockedParent = p_parent.lock();
 
         // If current thread is not the same as the thread of the parent object, stop the current thread

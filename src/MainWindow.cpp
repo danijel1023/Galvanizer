@@ -53,7 +53,7 @@ uintptr_t MainWindow::Dispatcher(const std::shared_ptr<Event>& event)
 {
     if (event->IsType<WindowEvent>())
     {
-        auto winEvent = static_cast<WindowEvent&>(*event);
+        auto& winEvent = static_cast<WindowEvent&>(*event);
 
         if (winEvent.message == WindowMessage::Render ||
             winEvent.message == WindowMessage::RenderInit ||
@@ -66,7 +66,7 @@ uintptr_t MainWindow::Dispatcher(const std::shared_ptr<Event>& event)
         if (winEvent.message == WindowMessage::Render)
         {
             renderer.UpdateTextures();
-            renderer.SetSpace(Vec2(0, 0), p_size);
+            renderer.SetSpace(IVec2(0, 0), Utility::Round(p_pxSize));
             renderer.Clear();
 
             uintptr_t ret = BaseWindow::Dispatcher(event);
@@ -134,7 +134,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
         {
             // [TODO] Fix this: CreateWindow takes in a char* for name, horrible!!!
             thread_local std::string name = GetTarget();
-            auto createWin = CreateWindowEvent<WindowMessage::CreateWindow>(p_weakSelf, p_size,
+            auto createWin = CreateWindowEvent<WindowMessage::CreateWindow>(p_weakSelf, p_virtualSize,
                                                                             name.c_str(), p_parentMainWindow);
             Application::get()->PostEvent(createWin, p_weakSelf);
             break;
@@ -168,7 +168,7 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
 
     else if (event->IsType<WindowEvent>())
     {
-        auto winEvent = static_cast<WindowEvent&>(*event);
+        auto& winEvent = static_cast<WindowEvent&>(*event);
 
         switch (winEvent.message)
         {
@@ -221,9 +221,9 @@ uintptr_t MainWindow::Callback(const std::shared_ptr<Event>& event)
         case WindowMessage::Scale:
         {
             m_scale = winEvent.scale;
-            renderer.SetScale(m_scale);
             PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
-            return 0;
+
+            break;
         }
 
         default:

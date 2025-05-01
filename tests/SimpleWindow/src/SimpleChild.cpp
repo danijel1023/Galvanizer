@@ -31,17 +31,17 @@ uintptr_t SimpleChild::Callback(const std::shared_ptr<Event>& event)
 {
     if (event->IsType<ObjectEvent>())
     {
-        auto objEvent = static_cast<ObjectEvent&>(*event);
+        auto& objEvent = static_cast<ObjectEvent&>(*event);
 
         switch (objEvent.message)
         {
         case ObjectMessage::Init:
         {
-            p_pos = {50, 50};
-            p_size = {100, 200};
+            SetVirtualPos({50, 50});
+            SetVirtualSize({100, 200});
 
             m_bkg.color = {117.0 / 255, 137.0 / 255, 129.0 / 255, 1.0};
-            m_bkg.size = p_size;
+            m_bkg.size = p_virtualSize;
             break;
         }
 
@@ -52,14 +52,14 @@ uintptr_t SimpleChild::Callback(const std::shared_ptr<Event>& event)
 
     else if (event->IsType<WindowEvent>())
     {
-        auto winEvent = static_cast<WindowEvent&>(*event);
+        auto& winEvent = static_cast<WindowEvent&>(*event);
 
         switch (winEvent.message)
         {
         case WindowMessage::Render:
         {
-            p_mainWindowRef->renderer.SetSpace(winEvent.pos, p_size);
-            p_mainWindowRef->renderer.AddQuad(m_bkg);
+            p_mainWindowRef->renderer.SetSpace(Utility::Round(winEvent.pos), Utility::Round(p_pxSize));
+            p_mainWindowRef->renderer.AddQuad(m_bkg, p_mainWindowRef->GetScale());
             p_mainWindowRef->renderer.Render();
             break;
         }
@@ -71,7 +71,7 @@ uintptr_t SimpleChild::Callback(const std::shared_ptr<Event>& event)
 
     else if (event->IsType<MouseEvent>())
     {
-        auto mouseEvent = static_cast<MouseEvent&>(*event);
+        auto& mouseEvent = static_cast<MouseEvent&>(*event);
 
         switch (mouseEvent.message)
         {
@@ -80,21 +80,17 @@ uintptr_t SimpleChild::Callback(const std::shared_ptr<Event>& event)
             if (m_tracking)
             {
                 // Keep the distance from mouse and the lower left corner of the BaseWindow, the same.
-                p_pos += mouseEvent.pos - m_diff;
+                p_virtualPos += mouseEvent.pos - m_diff;
+                SetVirtualPos(p_virtualPos);
+
                 p_mainWindowRef->PostEvent(CreateWindowEvent<WindowMessage::RenderRequest>(), p_weakSelf);
             }
 
-
-            //std::cout << "[DEBUG] Child mouse move: [" << mouseEvent.pos.x << ", " << mouseEvent.pos.y << "]" <<
-            //        std::endl;
             break;
         }
 
         case MouseMessage::Button:
         {
-            std::cout << "[DEBUG] Child button! [" << mouseEvent.pos.x << ", " << mouseEvent.pos.y << "]" <<
-                    std::endl;
-
             if (mouseEvent.action == MouseAction::Press)
                 m_tracking = true;
             else

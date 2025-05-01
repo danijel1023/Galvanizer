@@ -63,6 +63,7 @@ vec4 GetTexture(int texSlot, vec2 texCoord) {
         case 13: return texture(u_textures[13], texCoord);
         case 14: return texture(u_textures[14], texCoord);
         case 15: return texture(u_textures[15], texCoord);
+        default : return vec4(vec3(0), 1);
     }
 }
 

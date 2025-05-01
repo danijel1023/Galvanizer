@@ -3,6 +3,7 @@
 #include "Utility.h"
 
 #include <iostream>
+#include <array>
 
 #include "glad/glad.h"
 
@@ -89,7 +90,7 @@ void QuadRenderer::Render()
 {
     for (const auto& quad: m_quadArr)
     {
-        QuadVertex vertices[4];
+        std::array<QuadVertex, 4> vertices;
 
         int type = static_cast<int>(quad.type);
 
@@ -116,7 +117,7 @@ void QuadRenderer::Render()
 
         // @formatter:on
 
-        m_obj.mesh.GetBuffer(m_posBuff).UpdateData(0, sizeof(vertices), vertices);
+        m_obj.mesh.GetBuffer(m_posBuff).UpdateData(0, sizeof(vertices), vertices.data());
         RenderAbstraction::Renderer::Draw(m_obj);
     }
 
@@ -191,34 +192,43 @@ void QuadRenderer::UpdateTextures()
 }
 
 
-void QuadRenderer::AddQuad(const Quad& quad)
+void QuadRenderer::AddQuad(const Quad& quad_, Vec2 scale, Rounding sizeRoundType, Rounding posRoundType)
 {
-    m_quadArr.push_back(quad);
+    m_quadArr.push_back(quad_);
+    auto& quad = m_quadArr.back();
+
+    quad.size = {quad.size.x * scale.x, quad.size.y * scale.y};
+    quad.pos = {quad.pos.x * scale.x, quad.pos.y * scale.y};
+
+    // @formatter:off
+    switch (sizeRoundType)
+    {
+    case Rounding::Round: quad.size = Vec2(Utility::Round(quad.size)); break;
+    case Rounding::Ceil:  quad.size = Vec2(Utility::Ceil(quad.size));  break;
+    case Rounding::Floor: quad.size = Vec2(Utility::Floor(quad.size)); break;
+    case Rounding::Trunc: quad.size = Vec2(Utility::Trunc(quad.size)); break;
+    case Rounding::None:  break;
+    }
+
+    switch (posRoundType)
+    {
+    case Rounding::Round: quad.pos = Vec2(Utility::Round(quad.pos)); break;
+    case Rounding::Ceil:  quad.pos = Vec2(Utility::Ceil(quad.pos));  break;
+    case Rounding::Floor: quad.pos = Vec2(Utility::Floor(quad.pos)); break;
+    case Rounding::Trunc: quad.pos = Vec2(Utility::Trunc(quad.pos)); break;
+    case Rounding::None:  break;
+    }
+    // @formatter:on
 }
 
 
-void QuadRenderer::SetSpace(Vec2 absPos, Vec2 size)
+void QuadRenderer::SetSpace(IVec2 absPos, IVec2 size)
 {
     const auto prog = m_obj.technique.program.lock();
-
-    if (!prog->SetUniformF("u_scale", m_scale.x, m_scale.y))
-        std::cout << "[ERROR] Couldn't set u_scale uniform!" << std::endl;
-
-    absPos = Vec2(absPos.x * m_scale.x, absPos.y * m_scale.y);
-    size = Vec2(size.x * m_scale.x, size.y * m_scale.y);
 
     glViewport(absPos.x, absPos.y, size.x, size.y);
     glScissor(absPos.x, absPos.y, size.x, size.y);
 
-    if (!prog->SetUniformF("u_winSize", size.x, size.y))
+    if (!prog->SetUniformI("u_winSize", size.x, size.y))
         std::cout << "[ERROR] Couldn't set u_winSize uniform!" << std::endl;
-
-
-    m_pos = absPos;
-    m_size = size;
-}
-
-void QuadRenderer::SetScale(Vec2 scale)
-{
-    m_scale = scale;
 }

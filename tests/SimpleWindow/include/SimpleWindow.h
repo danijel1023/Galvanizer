@@ -22,4 +22,6 @@ protected:
 private:
     Galvanizer::Quad m_bkg, m_q0, m_q1, m_q2, m_q3;
     std::shared_ptr<Galvanizer::QuadTex> m_tex;
+    bool m_capture = false;
+    int m_xAreaShrink = 0;
 };

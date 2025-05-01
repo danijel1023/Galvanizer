@@ -10,9 +10,7 @@ layout (location = 6) in float cpu_rotation;
 layout (location = 7) in float cpu_innerDiameter;
 layout (location = 8) in vec4 cpu_quadPosSize;
 
-uniform vec2 u_winSize;
-uniform vec2 u_scale;
-
+uniform ivec2 u_winSize;
 
 
 flat out int vert_type;
@@ -26,8 +24,7 @@ out vec2 vert_uv;
 void main()
 {
     float rad = radians(cpu_rotation);
-    vec2 pos = vec2(cpu_pos.x * u_scale.x, cpu_pos.y * u_scale.y);
-
+    vec2 pos = cpu_pos;
 
     vert_uv = (pos - cpu_quadPosSize.xy) / cpu_quadPosSize.zw * 2.0 - 1.0;
 

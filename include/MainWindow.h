@@ -24,6 +24,9 @@ public:
     std::weak_ptr<BaseWindow> mouseFocusWin, winUnderCursor;
     std::weak_ptr<GObj> keyboardFocus;
 
+    bool enableOutline = false;
+    float outlineThickness = 1.5;
+
 protected:
     MainWindow(std::string_view name, const std::weak_ptr<GObj>& parent, Factory* originFac);
     [[nodiscard]] bool OpenGLInitialised() const { return m_openGLInit; }
