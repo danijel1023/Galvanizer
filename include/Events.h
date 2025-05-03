@@ -269,8 +269,8 @@ enum class WindowMessage
     Undefined,
 
     Maximise, Iconify, Restore,
-    Resize, ResizeRequest, Position, PositionRequest,
-    FBResize, FBResizeRequest,
+    Resize, ResizeRequest, FBResize,
+    Position, PositionRequest,
     GainFocus, LoseFocus,
     Close, Refresh, Scale,
 

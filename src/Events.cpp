@@ -79,8 +79,6 @@ std::string WindowEvent::strMessage() const
         return "WindowEvent::PositionRequest";
     case WindowMessage::FBResize:
         return "WindowEvent::FBResize";
-    case WindowMessage::FBResizeRequest:
-        return "WindowEvent::FBResizeRequest";
 
     case WindowMessage::GainFocus:
         return "WindowEvent::GainFocus";
