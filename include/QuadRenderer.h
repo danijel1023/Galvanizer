@@ -1,6 +1,6 @@
 #pragma once
 #include "Quad.h"
-#include "renderAbstraction/RenderObject.h"
+#include "openglAbstraction/RenderObject.h"
 
 namespace Galvanizer
 {

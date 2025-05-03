@@ -1,8 +1,8 @@
 #pragma once
-#include <memory>
-#include <renderAbstraction/RenderObject.h>
-
+#include "openglAbstraction/RenderObject.h"
 #include "units.h"
+
+#include <memory>
 
 
 namespace Galvanizer

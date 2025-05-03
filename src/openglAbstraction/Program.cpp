@@ -1,10 +1,10 @@
 #include <cstdint>
 #include <iostream>
 
-#include "renderAbstraction/Program.h"
+#include "openglAbstraction/Program.h"
 
 #include "glad/glad.h"
-#include "renderAbstraction/GLErr.inl"
+#include "GLErr.inl"
 
 
 using namespace Galvanizer::RenderAbstraction;

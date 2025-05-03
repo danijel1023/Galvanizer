@@ -1,5 +1,6 @@
 #pragma once
 #include "units.h"
+
 #include <vector>
 
 namespace Galvanizer::RenderAbstraction

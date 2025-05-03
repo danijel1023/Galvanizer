@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Technique.h"
 #include "Mesh.h"
 

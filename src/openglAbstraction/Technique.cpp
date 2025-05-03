@@ -1,7 +1,7 @@
-#include "renderAbstraction/Technique.h"
+#include "openglAbstraction/Technique.h"
 
 #include "glad/glad.h"
-#include "renderAbstraction/GLErr.inl"
+#include "GLErr.inl"
 
 
 using namespace Galvanizer::RenderAbstraction;

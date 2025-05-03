@@ -1,8 +1,7 @@
 #pragma once
-#include <filesystem>
-#include <memory>
-
 #include "units.h"
+
+#include <filesystem>
 
 namespace Galvanizer
 {

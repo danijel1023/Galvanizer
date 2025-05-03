@@ -1,10 +1,10 @@
 #include <iostream>
 #include <unordered_map>
 
-#include "renderAbstraction/VertexSetup.h"
-#include "renderAbstraction/Mesh.h"
+#include "openglAbstraction/VertexSetup.h"
+#include "openglAbstraction/Mesh.h"
 
-#include "renderAbstraction/GLErr.inl"
+#include "GLErr.inl"
 #include "glad/glad.h"
 
 

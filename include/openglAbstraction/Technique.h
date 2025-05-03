@@ -4,6 +4,7 @@
 
 #include <unordered_map>
 
+
 namespace Galvanizer::RenderAbstraction
 {
 class Technique

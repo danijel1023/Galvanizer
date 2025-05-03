@@ -1,7 +1,8 @@
 #pragma once
-#include <vector>
 #include "Buffer.h"
 #include "VertexSetup.h"
+
+#include <vector>
 
 
 namespace Galvanizer::RenderAbstraction
