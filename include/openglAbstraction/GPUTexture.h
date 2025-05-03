@@ -5,7 +5,7 @@
 
 namespace Galvanizer
 {
-namespace RenderAbstraction
+namespace OpenglAbstraction
 {
 enum class TextureWrap { Repeat, Mirror, ClampEdge, ClampBorder };
 
@@ -51,9 +51,9 @@ private:
 };
 }
 
-namespace Utility::RenderAbstraction
+namespace Utility::OpenglAbstraction
 {
-uint8_t* LoadTexture(const std::filesystem::path& path, Galvanizer::RenderAbstraction::TextureSpecs* specs);
+uint8_t* LoadTexture(const std::filesystem::path& path, Galvanizer::OpenglAbstraction::TextureSpecs* specs);
 void DestroyTexture(uint8_t* data);
 }
 }

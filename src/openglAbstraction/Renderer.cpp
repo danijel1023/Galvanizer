@@ -4,7 +4,7 @@
 #include "GLErr.inl"
 
 
-using namespace Galvanizer::RenderAbstraction;
+using namespace Galvanizer::OpenglAbstraction;
 
 void Renderer::Draw(RenderObject& obj)
 {

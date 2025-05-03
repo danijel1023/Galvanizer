@@ -26,15 +26,15 @@ QuadRenderer::~QuadRenderer() = default;
 
 void QuadRenderer::Init(std::string_view vertSrc, std::string_view fragSrc)
 {
-    RenderAbstraction::Renderer::ClearColor({0.2f, 0.3f, 0.3f, 1.0f});
-    RenderAbstraction::Renderer::EnableBlending();
+    OpenglAbstraction::Renderer::ClearColor({0.2f, 0.3f, 0.3f, 1.0f});
+    OpenglAbstraction::Renderer::EnableBlending();
 
     m_obj.mesh.vertexSetup.Init();
 
-    m_prog = std::make_shared<RenderAbstraction::Program>();
+    m_prog = std::make_shared<OpenglAbstraction::Program>();
 
-    m_prog->CreateShader(vertSrc, RenderAbstraction::ShaderType::Vertex);
-    m_prog->CreateShader(fragSrc, RenderAbstraction::ShaderType::Fragment);
+    m_prog->CreateShader(vertSrc, OpenglAbstraction::ShaderType::Vertex);
+    m_prog->CreateShader(fragSrc, OpenglAbstraction::ShaderType::Fragment);
     m_prog->CompileProgram();
 
     m_obj.technique.program = m_prog;
@@ -42,7 +42,7 @@ void QuadRenderer::Init(std::string_view vertSrc, std::string_view fragSrc)
 
     auto& mesh = m_obj.mesh;
     m_posBuff = mesh.CreateVertexBuffer(sizeof(QuadVertex) * m_quadVertices.capacity(), nullptr,
-                                        RenderAbstraction::BufferUsage::Dynamic);
+                                        OpenglAbstraction::BufferUsage::Dynamic);
 
     /*
      *      int type = 0;
@@ -66,7 +66,7 @@ void QuadRenderer::Init(std::string_view vertSrc, std::string_view fragSrc)
         {m_posBuff, VarType::Vec4, 8},
     });
 
-    size_t indexBuff = mesh.CreateIndexBuffer(sizeof(indices), indices, RenderAbstraction::BufferUsage::Dynamic);
+    size_t indexBuff = mesh.CreateIndexBuffer(sizeof(indices), indices, OpenglAbstraction::BufferUsage::Dynamic);
     mesh.vertexSetup.SetIndexBuffer(indexBuff);
 }
 
@@ -83,7 +83,7 @@ void QuadRenderer::Exit()
 
 void QuadRenderer::Clear()
 {
-    RenderAbstraction::Renderer::Clear();
+    OpenglAbstraction::Renderer::Clear();
 }
 
 void QuadRenderer::Render()
@@ -118,7 +118,7 @@ void QuadRenderer::Render()
         // @formatter:on
 
         m_obj.mesh.GetBuffer(m_posBuff).UpdateData(0, sizeof(vertices), vertices.data());
-        RenderAbstraction::Renderer::Draw(m_obj);
+        OpenglAbstraction::Renderer::Draw(m_obj);
     }
 
     m_quadArr.clear();
@@ -150,7 +150,7 @@ void QuadRenderer::UpdateTextures()
             std::lock_guard lck(tex->texM);
             if (tex->data && !tex->gpuTex)
             {
-                tex->gpuTex = std::make_shared<RenderAbstraction::GPUTexture>(tex->data, tex->specs);
+                tex->gpuTex = std::make_shared<OpenglAbstraction::GPUTexture>(tex->data, tex->specs);
 
                 if (tex->deleter)
                 {

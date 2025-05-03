@@ -5,7 +5,7 @@
 #include "GLErr.inl"
 
 
-using namespace Galvanizer::RenderAbstraction;
+using namespace Galvanizer::OpenglAbstraction;
 
 static GLint GetGLTextureWrap(const TextureWrap wrap)
 {
@@ -99,7 +99,7 @@ GPUTexture::~GPUTexture()
 }
 
 
-uint8_t* Galvanizer::Utility::RenderAbstraction::LoadTexture(const std::filesystem::path& path, TextureSpecs* specs)
+uint8_t* Galvanizer::Utility::OpenglAbstraction::LoadTexture(const std::filesystem::path& path, TextureSpecs* specs)
 {
     stbi_set_flip_vertically_on_load(true);
 
@@ -113,7 +113,7 @@ uint8_t* Galvanizer::Utility::RenderAbstraction::LoadTexture(const std::filesyst
     return data;
 }
 
-void Galvanizer::Utility::RenderAbstraction::DestroyTexture(uint8_t* data)
+void Galvanizer::Utility::OpenglAbstraction::DestroyTexture(uint8_t* data)
 {
     stbi_image_free(data);
 }

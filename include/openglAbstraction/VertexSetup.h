@@ -3,7 +3,7 @@
 
 #include <vector>
 
-namespace Galvanizer::RenderAbstraction
+namespace Galvanizer::OpenglAbstraction
 {
 struct VertexLayout
 {

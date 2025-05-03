@@ -7,7 +7,7 @@
 #include "GLErr.inl"
 
 
-using namespace Galvanizer::RenderAbstraction;
+using namespace Galvanizer::OpenglAbstraction;
 
 Program::~Program()
 {

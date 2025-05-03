@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-namespace Galvanizer::RenderAbstraction
+namespace Galvanizer::OpenglAbstraction
 {
 class InstanceArray
 {

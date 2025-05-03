@@ -2,7 +2,7 @@
 #include "InstanceArray.h"
 #include "RenderObject.h"
 
-namespace Galvanizer::RenderAbstraction
+namespace Galvanizer::OpenglAbstraction
 {
 class Renderer
 {

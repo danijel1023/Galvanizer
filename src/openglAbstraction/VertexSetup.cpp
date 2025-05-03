@@ -8,7 +8,7 @@
 #include "glad/glad.h"
 
 
-using namespace Galvanizer::RenderAbstraction;
+using namespace Galvanizer::OpenglAbstraction;
 
 VertexSetup::VertexSetup(Mesh* mesh)
     : m_mesh(mesh) {}

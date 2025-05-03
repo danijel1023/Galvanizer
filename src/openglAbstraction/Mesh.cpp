@@ -1,7 +1,7 @@
 #include "openglAbstraction/Mesh.h"
 
 
-using namespace Galvanizer::RenderAbstraction;
+using namespace Galvanizer::OpenglAbstraction;
 
 size_t Mesh::CreateVertexBuffer(size_t size, const void* data, BufferUsage usage)
 {

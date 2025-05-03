@@ -2,7 +2,7 @@
 #include "Technique.h"
 #include "Mesh.h"
 
-namespace Galvanizer::RenderAbstraction
+namespace Galvanizer::OpenglAbstraction
 {
 class RenderObject
 {

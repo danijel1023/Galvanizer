@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-namespace Galvanizer::RenderAbstraction
+namespace Galvanizer::OpenglAbstraction
 {
 enum class ShaderType { Vertex, Fragment };
 

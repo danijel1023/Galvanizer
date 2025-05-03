@@ -4,7 +4,7 @@
 #include "GLErr.inl"
 
 
-using namespace Galvanizer::RenderAbstraction;
+using namespace Galvanizer::OpenglAbstraction;
 
 void Technique::UseTexture(const std::weak_ptr<GPUTexture>& texture, const std::string& uniform)
 {

@@ -35,14 +35,14 @@ public:
     void UpdateTextures();
 
 private:
-    std::shared_ptr<RenderAbstraction::Program> m_prog;
+    std::shared_ptr<OpenglAbstraction::Program> m_prog;
 
     size_t m_posBuff;
-    RenderAbstraction::RenderObject m_obj;
+    OpenglAbstraction::RenderObject m_obj;
 
     std::vector<Quad> m_quadArr;
     std::vector<QuadVertex> m_quadVertices;
-    std::vector<std::shared_ptr<RenderAbstraction::GPUTexture>> m_internalTextures;
+    std::vector<std::shared_ptr<OpenglAbstraction::GPUTexture>> m_internalTextures;
 
     std::mutex m_texDBM;
     std::vector<std::shared_ptr<QuadTex>> m_texDB;

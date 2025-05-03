@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-namespace Galvanizer::RenderAbstraction
+namespace Galvanizer::OpenglAbstraction
 {
 enum class BufferType { Unknown, Vertex, Index };
 

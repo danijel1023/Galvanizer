@@ -6,7 +6,7 @@
 #include "GLErr.inl"
 
 
-using namespace Galvanizer::RenderAbstraction;
+using namespace Galvanizer::OpenglAbstraction;
 
 static GLenum GetGLType(BufferType type)
 {
