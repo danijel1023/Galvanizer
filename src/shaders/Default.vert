@@ -19,6 +19,7 @@ out vec2 vert_texCoords;
 flat out int vert_texSlot;
 out float vert_innerDiameter;
 out vec2 vert_uv;
+out vec4 vert_quadPosSize;
 
 
 void main()
@@ -45,4 +46,5 @@ void main()
     vert_texSlot = cpu_texSlot;
     vert_type = cpu_type;
     vert_innerDiameter = cpu_innerDiameter;
+    vert_quadPosSize = cpu_quadPosSize;
 }

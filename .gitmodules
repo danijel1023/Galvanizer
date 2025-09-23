@@ -1,3 +1,6 @@
 [submodule "vendor/glfw"]
 	path = vendor/glfw
 	url = https://github.com/danijel1023/glfw
+[submodule "vendor/msdf-atlas-gen"]
+	path = vendor/msdf-atlas-gen
+	url = https://github.com/Chlumsky/msdf-atlas-gen
