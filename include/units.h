@@ -15,14 +15,21 @@ struct Vec2
         return Vec2(x + second.x, y + second.y);
     }
 
-    Vec2 operator+(const float& second) const
+    Vec2 operator+(float second) const
     {
         return Vec2(x + second, y + second);
     }
 
-    Vec2 operator*(const float& second) const
+    Vec2 operator*(float second) const
     {
         return Vec2(x * second, y * second);
+    }
+
+    Vec2 operator*=(float second)
+    {
+        x *= second;
+        y *= second;
+        return *this;
     }
 
     template<class T>
