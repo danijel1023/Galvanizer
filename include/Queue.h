@@ -48,6 +48,6 @@ public:
 private:
     IBlockingObject* m_BO;
     std::mutex m_QAccessMutex;
-    std::queue<std::shared_ptr<Event> > m_eventQueue;
+    std::queue<std::shared_ptr<Event>> m_eventQueue;
 };
 }

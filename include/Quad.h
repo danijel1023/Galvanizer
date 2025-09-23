@@ -10,7 +10,7 @@ namespace Galvanizer
 struct QuadTex
 {
     // Function to free the pixel data on VRAM texture copy
-    void (*deleter)(uint8_t* data) = &Utility::OpenglAbstraction::DestroyTexture;
+    void (*deleter)(void* data) = &Utility::OpenglAbstraction::DestroyTexture;
     uint8_t* data = nullptr;
 
     OpenglAbstraction::TextureSpecs specs;

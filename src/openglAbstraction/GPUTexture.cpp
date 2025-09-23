@@ -53,7 +53,24 @@ static GLint GetGLTextureFiltering(const TextureFiltering filtering)
     }
 }
 
-GPUTexture::GPUTexture(const unsigned char* data, const TextureSpecs& specs)
+static GLenum GetGLTextureFormat(TextureFormat format)
+{
+    // @formatter:off
+    switch (format)
+    {
+    case TextureFormat::R:    return GL_RED;
+    case TextureFormat::RG:   return GL_RG;
+    case TextureFormat::RGB:  return GL_RGB;
+    case TextureFormat::BGR:  return GL_BGR;
+    case TextureFormat::RGBA: return GL_RGBA;
+    case TextureFormat::BGRA: return GL_BGRA;
+    default: return 0;
+    }
+    // @formatter:on
+}
+
+GPUTexture::GPUTexture(const void* data, const TextureSpecs& specs)
+    : m_specs(specs)
 {
     GLCall(glGenTextures(1, &m_id));
     GLCall(glBindTexture(GL_TEXTURE_2D, m_id));
@@ -65,13 +82,12 @@ GPUTexture::GPUTexture(const unsigned char* data, const TextureSpecs& specs)
     GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GetGLTextureFiltering(specs.magnify)));
 
     GLenum dataFormat;
-    if (specs.channels == 4)
-        dataFormat = GL_RGBA;
-    else
-        dataFormat = GL_RGB;
-
+    dataFormat = GetGLTextureFormat(specs.format);
+    GLCall(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
     GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, specs.size.x, specs.size.y, 0, dataFormat, GL_UNSIGNED_BYTE, data));
-    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+
+    if (specs.generateMipmaps)
+        GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 }
 
 
@@ -98,22 +114,42 @@ GPUTexture::~GPUTexture()
     GLCall(glDeleteTextures(1, &m_id));
 }
 
+void GPUTexture::UpdateData(const void* data, IVec2 offset, IVec2 size)
+{
+    GLCall(glBindTexture(GL_TEXTURE_2D, m_id));
+    glTexSubImage2D(GL_TEXTURE_2D, 0, offset.x, offset.y, size.x, size.y, GL_RGB,
+                    GL_UNSIGNED_BYTE, data);
+}
 
-uint8_t* Galvanizer::Utility::OpenglAbstraction::LoadTexture(const std::filesystem::path& path, TextureSpecs* specs)
+
+
+void* Galvanizer::Utility::OpenglAbstraction::LoadTexture(const std::filesystem::path& path, TextureSpecs* specs)
 {
     stbi_set_flip_vertically_on_load(true);
 
-    int x, y;
-    auto data = stbi_load(path.c_str(), &x, &y, &specs->channels, 0);
-    specs->size = Vec2(x, y);
+    int x, y, channels;
+    void* data = stbi_load(path.c_str(), &x, &y, &channels, 0);
+    specs->size = IVec2(x, y);
+
+
+    // @formatter:off
+    switch (channels)
+    {
+    case 1: specs->format = TextureFormat::R; break;
+    case 2: specs->format = TextureFormat::RG; break;
+    case 3: specs->format = TextureFormat::RGB; break;
+    case 4: specs->format = TextureFormat::RGBA; break;
+    }
+    // @formatter:on
+
 
     if (!data)
-        std::cout << "[ERROR] Failed to load texture on path: " << path << std::endl;
+        std::cerr << "[ERROR] Failed to load texture on path: " << path << std::endl;
 
     return data;
 }
 
-void Galvanizer::Utility::OpenglAbstraction::DestroyTexture(uint8_t* data)
+void Galvanizer::Utility::OpenglAbstraction::DestroyTexture(void* data)
 {
     stbi_image_free(data);
 }

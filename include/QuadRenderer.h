@@ -14,6 +14,7 @@ class QuadRenderer
 public:
     QuadRenderer();
     ~QuadRenderer();
+    std::weak_ptr<OpenglAbstraction::Program> getProg() { return m_obj.technique.program; }
 
     void Init(std::string_view vertSrc, std::string_view fragSrc);
     void Exit();

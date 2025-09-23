@@ -16,11 +16,28 @@ enum class TextureFiltering
     LinearMipmap_Nearset, LinearMipmap_Linear
 };
 
+enum class TextureFormat { R = 1, RG, RGB, BGR, RGBA, BGRA };
+
+inline int GetTextureChannels(TextureFormat format)
+{
+    // @formatter:off
+    switch (format)
+    {
+    case TextureFormat::R:    return 1;
+    case TextureFormat::RG:   return 2;
+    case TextureFormat::RGB:  return 3;
+    case TextureFormat::BGR:  return 3;
+    case TextureFormat::RGBA: return 4;
+    case TextureFormat::BGRA: return 4;
+    default: return 0;
+    }
+    // @formatter:on
+}
 
 struct TextureSpecs
 {
-    int channels = 0;
-    Vec2 size;
+    TextureFormat format = {};
+    IVec2 size;
 
     TextureWrap horizontal = TextureWrap::Repeat;
     TextureWrap vertical = TextureWrap::Repeat;
@@ -28,6 +45,9 @@ struct TextureSpecs
     // magnify can't use Mipmap texture filtering
     TextureFiltering magnify = TextureFiltering::Linear;
     TextureFiltering minimize = TextureFiltering::LinearMipmap_Linear;
+
+    // Remember to set minimize filtering to non-mipmap one if disabling mipmaps
+    bool generateMipmaps = true;
 };
 
 
@@ -35,7 +55,7 @@ struct TextureSpecs
 struct GPUTexture
 {
     // Doesn't own data - only upload to the GPU
-    GPUTexture(const unsigned char* data, const TextureSpecs& specs);
+    GPUTexture(const void* data, const TextureSpecs& specs);
 
     GPUTexture(const GPUTexture&) = delete;
     GPUTexture& operator=(const GPUTexture&) = delete;
@@ -44,16 +64,20 @@ struct GPUTexture
 
     ~GPUTexture();
 
+    // Does not resize the texture - if you need a different size, make a new texture
+    void UpdateData(const void* data, IVec2 offset, IVec2 size);
+
     [[nodiscard]] unsigned int GetID() const { return m_id; }
 
 private:
+    TextureSpecs m_specs;
     unsigned int m_id = 0;
 };
 }
 
 namespace Utility::OpenglAbstraction
 {
-uint8_t* LoadTexture(const std::filesystem::path& path, Galvanizer::OpenglAbstraction::TextureSpecs* specs);
-void DestroyTexture(uint8_t* data);
+void* LoadTexture(const std::filesystem::path& path, Galvanizer::OpenglAbstraction::TextureSpecs* specs);
+void DestroyTexture(void* data);
 }
 }
