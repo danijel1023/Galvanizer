@@ -119,8 +119,27 @@ bool Program::SetUniformI(const std::string& uniform, int a) const
     return true;
 }
 
-bool Program::SetUniformF(const std::string& uniform, float a) const { return false; }
-bool Program::SetUniformD(const std::string& uniform, double a) const { return false; }
+bool Program::SetUniformF(const std::string& uniform, float a) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform1f(uniformLoc, a));
+    return true;
+}
+
+bool Program::SetUniformD(const std::string& uniform, double a) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform1d(uniformLoc, a));
+    return true;
+}
 
 bool Program::SetUniformI(const std::string& uniform, int a, int b) const
 {
@@ -144,10 +163,79 @@ bool Program::SetUniformF(const std::string& uniform, float a, float b) const
     return true;
 }
 
-bool Program::SetUniformD(const std::string& uniform, double a, double b) const { return false; }
-bool Program::SetUniformI(const std::string& uniform, int a, int b, int c) const { return false; }
-bool Program::SetUniformF(const std::string& uniform, float a, float b, float c) const { return false; }
-bool Program::SetUniformD(const std::string& uniform, double a, double b, double c) const { return false; }
-bool Program::SetUniformI(const std::string& uniform, int a, int b, int c, int d) const { return false; }
-bool Program::SetUniformF(const std::string& uniform, float a, float b, float c, float d) const { return false; }
-bool Program::SetUniformD(const std::string& uniform, double a, double b, double c, double d) const { return false; }
+bool Program::SetUniformD(const std::string& uniform, double a, double b) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform2d(uniformLoc, a, b));
+    return true;
+}
+
+bool Program::SetUniformI(const std::string& uniform, int a, int b, int c) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform3i(uniformLoc, a, b, c));
+    return true;
+}
+
+bool Program::SetUniformF(const std::string& uniform, float a, float b, float c) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform3f(uniformLoc, a, b, c));
+    return true;
+}
+
+bool Program::SetUniformD(const std::string& uniform, double a, double b, double c) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform3d(uniformLoc, a, b, c));
+    return true;
+}
+
+bool Program::SetUniformI(const std::string& uniform, int a, int b, int c, int d) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform4i(uniformLoc, a, b, c, d));
+    return true;
+}
+
+bool Program::SetUniformF(const std::string& uniform, float a, float b, float c, float d) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform4f(uniformLoc, a, b, c, d));
+    return true;
+}
+
+bool Program::SetUniformD(const std::string& uniform, double a, double b, double c, double d) const
+{
+    int uniformLoc = glGetUniformLocation(m_program, uniform.c_str());
+    if (uniformLoc == -1)
+        return false;
+
+    Bind();
+    GLCall(glUniform4d(uniformLoc, a, b, c, d));
+    return true;
+}
