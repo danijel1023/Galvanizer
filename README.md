@@ -1,7 +1,5 @@
 # Galvanizer
 
----
-
 Build information is found on the bottom of the readme file.
 
 ### Included Application
