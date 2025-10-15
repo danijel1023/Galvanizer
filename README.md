@@ -6,13 +6,13 @@ Build information is found on the bottom of the readme file.
 
 ### Included Application
 
-The included test application demonstrates the displaying of a texture,
-response to mouse, window and keyboard events. Hovering over any of the 3 windows (main window (1), the gray window
-containing the yellow one (2) and the yellow window(3)) will outline them with an orange outline. Clicking and dragging
-the (2) window will drag it to the mouse pointer location. The application will correctly resize all of its elements
-based on the monitors' scaling factor and will react on changes (at least on Linux with Wayland - not tested on
-Windows). Clicking on the (1) window and typing on keyboard will print to the console the inputted key presses together
-with the OS provided codepoints.
+The included test application demonstrates the displaying of a texture (not going to work unless you add a texture
+yourself in specified path - check `SimpleWindow.cpp`), response to mouse, window and keyboard events. Hovering over any
+of the 3 windows (main window (1), the gray window containing the yellow one (2) and the yellow window(3)) will outline
+them with an orange outline. Clicking and dragging the (2) window will drag it to the mouse pointer location. The
+application will correctly resize all of its elements based on the monitors' scaling factor and will react on changes (
+at least on Linux with Wayland - not tested on Windows). Clicking on the (1) window and typing on keyboard will print to
+the console the inputted key presses together with the OS provided codepoints.
 
 The code of the test application is not well written as it currently serves me like a test platform so it
 includes traces of other former code (eg. unused variables, etc).
