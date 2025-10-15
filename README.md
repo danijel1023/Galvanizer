@@ -11,7 +11,7 @@ response to mouse, window and keyboard events. Hovering over any of the 3 window
 containing the yellow one (2) and the yellow window(3)) will outline them with an orange outline. Clicking and dragging
 the (2) window will drag it to the mouse pointer location. The application will correctly resize all of its elements
 based on the monitors' scaling factor and will react on changes (at least on Linux with Wayland - not tested on
-Windows). Clicking on the (0) window and typing on keyboard will print to the console the inputted key presses together
+Windows). Clicking on the (1) window and typing on keyboard will print to the console the inputted key presses together
 with the OS provided codepoints.
 
 The code of the test application is not well written as it currently serves me like a test platform so it
