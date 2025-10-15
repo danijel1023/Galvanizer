@@ -85,10 +85,11 @@ uintptr_t SimpleWindow::Callback(const std::shared_ptr<Event>& event)
             m_q3.size = {100, 100};
 
             m_tex = std::make_shared<QuadTex>();
-            m_tex->data = Utility::OpenglAbstraction::LoadTexture("../../../../opengl-testing.png", &m_tex->specs);
+            m_tex->data = static_cast<uint8_t*>(Utility::OpenglAbstraction::LoadTexture(
+                "../../../../opengl-testing.png", &m_tex->specs));
             m_q0.texture = m_tex;
-            m_q0.texPos = {0, 0};
-            m_q0.texSize = m_tex->specs.size;
+            m_q0.texPos = { 0, 0 };
+            m_q0.texSize = Vec2(m_tex->specs.size);
 
             renderer.AddTexture(m_tex);
 
